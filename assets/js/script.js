@@ -1,1 +1,6 @@
-// This file is intentionally left blank.
+jQuery(document).ready(function($) {
+
+    console.log('AMFM Maps');
+
+});
+

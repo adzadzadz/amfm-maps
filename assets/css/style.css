@@ -1,40 +1,14 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+.elementor-button-wrapper:has(.amfm-map-filter-item) {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 5px !important;
 }
 
-.amfm-map-widget {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 20px;
-    margin-bottom: 20px;
+/* Cols */
+.elementor-button-wrapper:has(.amfm-col-2) {
+    width: 50%;
 }
 
-.amfm-map-widget h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.amfm-map-widget p {
-    font-size: 16px;
-    line-height: 1.5;
-}
-
-.amfm-new-element {
-    background-color: #fff;
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.amfm-new-element h3 {
-    font-size: 20px;
-    margin-bottom: 5px;
-}
-
-.amfm-new-element .description {
-    font-size: 14px;
-    color: #666;
+.elementor-button-wrapper:has(.amfm-col-3) {
+    width: 33.333%;
 }

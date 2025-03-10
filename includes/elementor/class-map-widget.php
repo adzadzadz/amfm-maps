@@ -1,62 +1,194 @@
 <?php
+
 namespace AMFM_Maps\Elementor;
 
 use Elementor\Widget_Base;
+use Elementor\Repeater;
+use Elementor\Controls_Manager;
 
-class MapWidget extends Widget_Base {
+if (! defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
+}
 
-    public function get_name() {
-        return 'map_widget';
+class MapWidget extends Widget_Base
+{
+
+    public function get_name()
+    {
+        return 'amfm_map_widget';
     }
 
-    public function get_title() {
-        return __( 'Map Widget', 'amfm-maps' );
+    public function get_title()
+    {
+        return __('AMFM Map Widget', 'amfm-maps');
     }
 
-    public function get_icon() {
+    public function get_icon()
+    {
         return 'eicon-map';
     }
 
-    public function get_categories() {
-        return [ 'basic' ];
+    public function get_categories()
+    {
+        return ['basic'];
     }
 
-    protected function _register_controls() {
+    protected function _register_controls()
+    {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __( 'Content', 'amfm-maps' ),
-                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+                'label' => __('Content', 'amfm-maps'),
+                'tab' => Controls_Manager::TAB_CONTENT,
             ]
         );
 
+        // input for Location Query
         $this->add_control(
-            'map_location',
+            'location_query',
             [
-                'label' => __( 'Map Location', 'amfm-maps' ),
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => __( 'New York, USA', 'amfm-maps' ),
+                'label' => __('Location Query', 'amfm-maps'),
+                'type' => Controls_Manager::TEXT,
+                'default' => __('AMFM Mental Health Treatment', 'amfm-maps'),
+                'label_block' => true,
+            ]
+        );
+
+        $this->end_controls_section();
+
+        $this->start_controls_section(
+            'layout_section',
+            [
+                'label' => __('Layout', 'amfm-maps'),
+                'tab' => Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_responsive_control(
+            'map_width',
+            [
+                'label' => __('Width', 'amfm-maps'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['%', 'px'],
+                'range' => [
+                    '%' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1200,
+                    ],
+                ],
+                'default' => [
+                    'unit' => '%',
+                    'size' => 100,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-map-control' => 'width: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'map_height',
+            [
+                'label' => __('Height', 'amfm-maps'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1200,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 300,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-map-control' => 'height: {{SIZE}}{{UNIT}};',
+                ],
             ]
         );
 
         $this->end_controls_section();
     }
 
-    protected function render() {
+    protected function render()
+    {
         $settings = $this->get_settings_for_display();
-        echo '<div class="map-widget">';
-        echo '<h2>' . esc_html( $settings['map_location'] ) . '</h2>';
-        // Here you would integrate the map rendering logic
-        echo '</div>';
+
+        echo '<div id="amfm-map" class="amfm-map-control"></div>';
+
+        // echo a script which searches for the location query with the Google Maps API and displays the map with the pinned locations using jQuery
+        // echo '<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc&loading=async&libraries=places"></script>';
+
+        echo '<script>
+            function initMap() {
+                var centerPoint = { lat: 33.4402, lng: -118.0807 };
+                var map = new google.maps.Map(document.getElementById("amfm-map"), {
+                    center: centerPoint,
+                    zoom: 10
+                });
+
+                var service = new google.maps.places.PlacesService(map);
+                var infowindow = new google.maps.InfoWindow();
+                var bounds = new google.maps.LatLngBounds();
+
+                var request = {
+                    query: "AMFM Mental Health Treatment",
+                    fields: ["name", "geometry", "formatted_address", "photos", "rating", "opening_hours", "formatted_phone_number", "website", "vicinity", "url", "international_phone_number"]
+                };
+
+                service.textSearch(request, function (results, status) {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        results.forEach(function (place) {
+                            if (place.geometry && place.geometry.location) {
+                                var marker = new google.maps.Marker({
+                                    map: map,
+                                    position: place.geometry.location,
+                                    title: place.name
+                                });
+
+                                marker.addListener("click", function () {
+                                    console.log("place", place);
+                                    var content = ``;
+                                    if (place.photos && place.photos.length > 0) {
+                                        content += `<img src="${place.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 })}" alt="${place.name}">`;
+                                    }
+                                    
+                                    content += `<strong>${place.name}</strong><br>${place.formatted_address}`;
+
+                                    if (place.rating) {
+                                        content += `<br>Rating: ${place.rating}`;
+                                    }
+                                    if (place.opening_hours && place.opening_hours.weekday_text) {
+                                        content += `<br>Opening Hours:<br>${place.opening_hours.weekday_text.join("<br>")}`;
+                                    }
+                                    if (place.formatted_phone_number) {
+                                        content += `<br>Phone: ${place.formatted_phone_number}`;
+                                    }
+                                    if (place.website) {
+                                        content += `<br>Website: <a href="${place.website}" target="_blank">${place.website}</a>`;
+                                    }
+                                    infowindow.setContent(content);
+                                    infowindow.open(map, marker);
+                                });
+
+                                bounds.extend(place.geometry.location);
+                            }
+                        });
+
+                        map.fitBounds(bounds);
+                    } else {
+                        console.error("No locations found: " + status);
+                    }
+                });
+        }
+
+        window.onload = initMap;
+        </script>';
     }
 
-    protected function _content_template() {
-        ?>
-        <div class="map-widget">
-            <h2>{{ settings.map_location }}</h2>
-            <!-- Map rendering logic would go here -->
-        </div>
-        <?php
-    }
 }
-?>
