@@ -118,6 +118,7 @@ class MapWidget extends Widget_Base
     protected function render()
     {
         $settings = $this->get_settings_for_display();
+        $location_query = $settings['location_query'];
 
         echo '<div id="amfm-map" class="amfm-map-control"></div>';
 
@@ -129,7 +130,7 @@ class MapWidget extends Widget_Base
                 var centerPoint = { lat: 33.4402, lng: -118.0807 };
                 var map = new google.maps.Map(document.getElementById("amfm-map"), {
                     center: centerPoint,
-                    zoom: 10
+                    zoom: 14
                 });
 
                 var service = new google.maps.places.PlacesService(map);
@@ -153,25 +154,42 @@ class MapWidget extends Widget_Base
 
                                 marker.addListener("click", function () {
                                     console.log("place", place);
-                                    var content = ``;
-                                    if (place.photos && place.photos.length > 0) {
-                                        content += `<img src="${place.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 })}" alt="${place.name}">`;
-                                    }
-                                    
-                                    content += `<strong>${place.name}</strong><br>${place.formatted_address}`;
+                                    var content = `
+                                        <div style="font-family: Arial, sans-serif; padding: 10px; max-width: 250px;">
+                                            ${(place.photos && place.photos.length > 0) ? `
+                                            <div style="margin-bottom: 10px;">
+                                                <img src="${place.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 })}" 
+                                                    alt="${place.name}" 
+                                                    style="width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
+                                            </div>` : ``}
 
-                                    if (place.rating) {
-                                        content += `<br>Rating: ${place.rating}`;
-                                    }
-                                    if (place.opening_hours && place.opening_hours.weekday_text) {
-                                        content += `<br>Opening Hours:<br>${place.opening_hours.weekday_text.join("<br>")}`;
-                                    }
-                                    if (place.formatted_phone_number) {
-                                        content += `<br>Phone: ${place.formatted_phone_number}`;
-                                    }
-                                    if (place.website) {
-                                        content += `<br>Website: <a href="${place.website}" target="_blank">${place.website}</a>`;
-                                    }
+                                            <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">${place.name}</div>
+                                            <div style="color: #666; margin-bottom: 10px;">${place.formatted_address}</div>
+
+                                            ${(place.rating) ? `
+                                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+                                                ⭐ <span>${place.rating}</span>
+                                            </div>` : ``}
+
+                                            ${(place.opening_hours && place.opening_hours.weekday_text) ? `
+                                            <div style="margin-bottom: 10px;">
+                                                <strong>Opening Hours:</strong>
+                                                ${place.opening_hours.weekday_text.map(hour => `<div style="color: #666;">${hour}</div>`).join(``)}
+                                            </div>` : ``}
+
+                                            ${(place.formatted_phone_number) ? `
+                                            <div><strong>Phone:</strong> ${place.formatted_phone_number}</div>` : ``}
+
+                                            ${(place.website) ? `
+                                            <div>
+                                                <strong>Website:</strong> 
+                                                <a href="${place.website}" target="_blank" style="color: #1a73e8; text-decoration: none;">
+                                                    ${place.website.replace(/^https?:\/\//, ``)}
+                                                </a>
+                                            </div>` : ``}
+                                        </div>
+                                    `;
+
                                     infowindow.setContent(content);
                                     infowindow.open(map, marker);
                                 });
@@ -185,10 +203,11 @@ class MapWidget extends Widget_Base
                         console.error("No locations found: " + status);
                     }
                 });
-        }
+            }
 
-        window.onload = initMap;
+            window.onload = initMap;
         </script>';
+
     }
 
 }
