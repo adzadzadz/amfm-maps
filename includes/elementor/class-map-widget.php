@@ -108,17 +108,6 @@ class MapWidget extends Widget_Base
             ]
         );
 
-        // input for Bounds
-        $this->add_control(
-            'bounds',
-            [
-                'label' => __('Bounds', 'amfm-maps'),
-                'type' => Controls_Manager::TEXT,
-                'default' => '24.396308,-125.000000,49.384358,-66.934570', // Default bounds for the US
-                'label_block' => true,
-            ]
-        );
-
         // input for PageToken
         $this->add_control(
             'page_token',
@@ -217,15 +206,18 @@ class MapWidget extends Widget_Base
         $page_token = $settings['page_token'];
         $show_info = $settings['show_info'];
 
-        echo '<div id="amfm-map" class="amfm-map-control"></div>';
+        // Generate a unique ID for this instance of the widget
+        $unique_id = 'amfm_map_' . uniqid();
+
+        echo '<div id="' . esc_attr($unique_id) . '" class="amfm-map-control"></div>';
         if ($show_info === 'yes') {
-            echo '<div id="amfm-map-info" style="font-family: Arial, sans-serif; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px;"></div>';
+            echo '<div id="' . esc_attr($unique_id) . '-info" style="font-family: Arial, sans-serif; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px;"></div>';
         }
 
         echo '<script>
-            function initMap() {
+            function initMap' . esc_js($unique_id) . '() {
                 var centerPoint = { lat: ' . esc_js($location[0]) . ', lng: ' . esc_js($location[1]) . ' };
-                var map = new google.maps.Map(document.getElementById("amfm-map"), {
+                var map = new google.maps.Map(document.getElementById("' . esc_js($unique_id) . '"), {
                     center: centerPoint,
                     zoom: 4
                 });
@@ -243,11 +235,11 @@ class MapWidget extends Widget_Base
                         type: "' . esc_js($type) . '",
                         keyword: "' . esc_js($keyword) . '",
                         fields: ' . json_encode($fields) . ',
+                        pageToken: nextPageToken || "' . esc_js($page_token) . '",
                         bounds: new google.maps.LatLngBounds(
-                            { lat: ' . esc_js($bounds[0]) . ', lng: ' . esc_js($bounds[1]) . ' },
-                            { lat: ' . esc_js($bounds[2]) . ', lng: ' . esc_js($bounds[3]) . ' }
-                        ),
-                        pageToken: nextPageToken || "' . esc_js($page_token) . '"
+                            { lat: 24.396308, lng: -125.000000 },
+                            { lat: 49.384358, lng: -66.934570 }
+                        )
                     };
 
                     service.textSearch(request, function (results, status, pagination) {
@@ -309,8 +301,8 @@ class MapWidget extends Widget_Base
                             map.fitBounds(bounds);
 
                             // Update the info div with the number of pinned locations
-                            if (document.getElementById("amfm-map-info")) {
-                                document.getElementById("amfm-map-info").innerHTML = `
+                            if (document.getElementById("' . esc_js($unique_id) . '-info")) {
+                                document.getElementById("' . esc_js($unique_id) . '-info").innerHTML = `
                                     <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">Search Results</div>
                                     <div style="color: #666;">Number of pinned locations: ${pinnedLocationsCount}</div>
                                 `;
@@ -322,8 +314,8 @@ class MapWidget extends Widget_Base
                             }
                         } else {
                             console.error("No locations found: " + status);
-                            if (document.getElementById("amfm-map-info")) {
-                                document.getElementById("amfm-map-info").innerHTML = `
+                            if (document.getElementById("' . esc_js($unique_id) . '-info")) {
+                                document.getElementById("' . esc_js($unique_id) . '-info").innerHTML = `
                                     <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">Search Results</div>
                                     <div style="color: #666;">No locations found.</div>
                                 `;
@@ -336,12 +328,12 @@ class MapWidget extends Widget_Base
             }
 
             // Initialize the map when the window loads
-            window.onload = initMap;
+            window.onload = initMap' . esc_js($unique_id) . ';
 
             // Initialize the map when the Elementor editor is loaded or updated
             jQuery(window).on("elementor/frontend/init", function () {
                 elementorFrontend.hooks.addAction("frontend/element_ready/amfm_maps.default", function () {
-                    initMap();
+                    initMap' . esc_js($unique_id) . '();
                 });
             });
         </script>';
