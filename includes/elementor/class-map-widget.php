@@ -54,17 +54,6 @@ class MapWidget extends Widget_Base
             ]
         );
 
-        // input for Location
-        $this->add_control(
-            'location',
-            [
-                'label' => __('Location', 'amfm-maps'),
-                'type' => Controls_Manager::TEXT,
-                'default' => '39.8283,-98.5795', // Geographic center of the US
-                'label_block' => true,
-            ]
-        );
-
         // input for Radius
         $this->add_control(
             'radius',
@@ -104,17 +93,6 @@ class MapWidget extends Widget_Base
                 'label' => __('Fields', 'amfm-maps'),
                 'type' => Controls_Manager::TEXT,
                 'default' => 'name,geometry,formatted_address,photos,rating,opening_hours,formatted_phone_number,website,vicinity,url,international_phone_number',
-                'label_block' => true,
-            ]
-        );
-
-        // input for PageToken
-        $this->add_control(
-            'page_token',
-            [
-                'label' => __('Page Token', 'amfm-maps'),
-                'type' => Controls_Manager::TEXT,
-                'default' => '',
                 'label_block' => true,
             ]
         );
@@ -197,12 +175,10 @@ class MapWidget extends Widget_Base
     {
         $settings = $this->get_settings_for_display();
         $location_query = $settings['location_query'];
-        $location = explode(',', $settings['location']);
         $radius = $settings['radius'];
         $type = $settings['type'];
         $keyword = $settings['keyword'];
         $fields = explode(',', $settings['fields']);
-        $bounds = explode(',', $settings['bounds']);
         $page_token = $settings['page_token'];
         $show_info = $settings['show_info'];
 
@@ -216,7 +192,7 @@ class MapWidget extends Widget_Base
 
         echo '<script>
             function initMap' . esc_js($unique_id) . '() {
-                var centerPoint = { lat: ' . esc_js($location[0]) . ', lng: ' . esc_js($location[1]) . ' };
+                var centerPoint = { lat: 39.8283, lng: -98.5795 };
                 var map = new google.maps.Map(document.getElementById("' . esc_js($unique_id) . '"), {
                     center: centerPoint,
                     zoom: 4
