@@ -335,7 +335,15 @@ class MapWidget extends Widget_Base
                 searchLocations();
             }
 
+            // Initialize the map when the window loads
             window.onload = initMap;
+
+            // Initialize the map when the Elementor editor is loaded or updated
+            jQuery(window).on("elementor/frontend/init", function () {
+                elementorFrontend.hooks.addAction("frontend/element_ready/amfm_maps.default", function () {
+                    initMap();
+                });
+            });
         </script>';
     }
 
