@@ -3,16 +3,14 @@
 namespace AMFM_Maps\Elementor;
 
 use Elementor\Widget_Base;
-use Elementor\Repeater;
 use Elementor\Controls_Manager;
 
-if (! defined('ABSPATH')) {
+if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
 class MapWidget extends Widget_Base
 {
-
     public function get_name()
     {
         return 'amfm_maps';
@@ -54,16 +52,6 @@ class MapWidget extends Widget_Base
             ]
         );
 
-        // input for Radius
-        $this->add_control(
-            'radius',
-            [
-                'label' => __('Radius (meters)', 'amfm-maps'),
-                'type' => Controls_Manager::NUMBER,
-                'default' => 5000,
-            ]
-        );
-
         // input for Type
         $this->add_control(
             'type',
@@ -93,6 +81,17 @@ class MapWidget extends Widget_Base
                 'label' => __('Fields', 'amfm-maps'),
                 'type' => Controls_Manager::TEXT,
                 'default' => 'name,geometry,formatted_address,photos,rating,opening_hours,formatted_phone_number,website,vicinity,url,international_phone_number',
+                'label_block' => true,
+            ]
+        );
+
+        // input for filter classname
+        $this->add_control(
+            'filter_class',
+            [
+                'label' => __('Filter Class', 'amfm-maps'),
+                'type' => Controls_Manager::TEXT,
+                'default' => 'amfm_maps_filter',
                 'label_block' => true,
             ]
         );
@@ -174,53 +173,75 @@ class MapWidget extends Widget_Base
     protected function render()
     {
         $settings = $this->get_settings_for_display();
-        $location_query = $settings['location_query'];
-        $radius = $settings['radius'];
-        $type = $settings['type'];
-        $keyword = $settings['keyword'];
-        $fields = explode(',', $settings['fields']);
-        $page_token = $settings['page_token'];
+        $location_query = esc_js($settings['location_query']);
+        $type = esc_js($settings['type']);
+        $keyword = esc_js($settings['keyword']);
+        $fields = json_encode(explode(',', $settings['fields']));
+        $page_token = esc_js($settings['page_token']);
         $show_info = $settings['show_info'];
+        $filter_class = esc_js($settings['filter_class']);
 
         // Generate a unique ID for this instance of the widget
         $unique_id = 'amfm_map_' . uniqid();
 
+        $filter_script = '';
+        if ($filter_class) {
+            $filter_script = '
+                jQuery(".' . $filter_class . '").on("click", function() {
+                    let query = jQuery(this).data("query");
+
+                    if (query) {
+                        searchLocations(query);
+                    }
+                    
+                    console.log("Filtering", query);
+                });
+            ';
+        }
+
         echo '<div id="' . esc_attr($unique_id) . '" class="amfm-map-control"></div>';
         if ($show_info === 'yes') {
-            echo '<div id="' . esc_attr($unique_id) . '-info" style="font-family: Arial, sans-serif; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px;"></div>';
+            echo '<div id="' . esc_attr($unique_id) . '-info" class="amfm-map-info"></div>';
         }
 
         echo '<script>
-            function initMap' . esc_js($unique_id) . '() {
+            function initMap' . $unique_id . '() {
                 var centerPoint = { lat: 39.8283, lng: -98.5795 };
-                var map = new google.maps.Map(document.getElementById("' . esc_js($unique_id) . '"), {
+                var map = new google.maps.Map(document.getElementById("' . $unique_id . '"), {
                     center: centerPoint,
                     zoom: 4
                 });
 
-                var service = new google.maps.places.PlacesService(map);
                 var infowindow = new google.maps.InfoWindow();
                 var bounds = new google.maps.LatLngBounds();
+                var markers = [];
                 var pinnedLocationsCount = 0;
 
-                function searchLocations(nextPageToken = null) {
+                function searchLocations(location_query, nextPageToken = null) {
+                    // Clear existing markers
+                    markers.forEach(function(marker) {
+                        marker.setMap(null);
+                    });
+                    markers = [];
+                    bounds = new google.maps.LatLngBounds();
+                    pinnedLocationsCount = 0;
+
+                    var service = new google.maps.places.PlacesService(map);
                     var request = {
-                        query: "' . esc_js($location_query) . '",
-                        location: centerPoint,
-                        radius: ' . esc_js($radius) . ',
-                        type: "' . esc_js($type) . '",
-                        keyword: "' . esc_js($keyword) . '",
-                        fields: ' . json_encode($fields) . ',
-                        pageToken: nextPageToken || "' . esc_js($page_token) . '",
+                        query: location_query,
+                        type: "' . $type . '",
+                        keyword: "' . $keyword . '",
+                        fields: ' . $fields . ',
+                        pageToken: nextPageToken || "' . $page_token . '",
                         bounds: new google.maps.LatLngBounds(
                             { lat: 24.396308, lng: -125.000000 },
                             { lat: 49.384358, lng: -66.934570 }
                         )
                     };
 
-                    service.textSearch(request, function (results, status, pagination) {
+                    service.textSearch(request, function(results, status, pagination) {
                         if (status === google.maps.places.PlacesServiceStatus.OK) {
-                            results.forEach(function (place) {
+                            results.forEach(function(place) {
                                 if (place.geometry && place.geometry.location) {
                                     var marker = new google.maps.Marker({
                                         map: map,
@@ -228,91 +249,77 @@ class MapWidget extends Widget_Base
                                         title: place.name
                                     });
 
-                                    marker.addListener("click", function () {
-                                        var content = `
-                                            <div style="font-family: Arial, sans-serif; padding: 10px; max-width: 250px;">
-                                                ${(place.photos && place.photos.length > 0) ? `
-                                                <div style="margin-bottom: 10px;">
-                                                    <img src="${place.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 })}" 
-                                                        alt="${place.name}" 
-                                                        style="width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
-                                                </div>` : ``}
-
-                                                <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">${place.name}</div>
-                                                <div style="color: #666; margin-bottom: 10px;">${place.formatted_address}</div>
-
-                                                ${(place.rating) ? `
-                                                <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
-                                                    ⭐ <span>${place.rating}</span>
-                                                </div>` : ``}
-
-                                                ${(place.opening_hours && place.opening_hours.weekday_text) ? `
-                                                <div style="margin-bottom: 10px;">
-                                                    <strong>Opening Hours:</strong>
-                                                    ${place.opening_hours.weekday_text.map(hour => `<div style="color: #666;">${hour}</div>`).join(``)}
-                                                </div>` : ``}
-
-                                                ${(place.formatted_phone_number) ? `
-                                                <div><strong>Phone:</strong> ${place.formatted_phone_number}</div>` : ``}
-
-                                                ${(place.website) ? `
-                                                <div>
-                                                    <strong>Website:</strong> 
-                                                    <a href="${place.website}" target="_blank" style="color: #1a73e8; text-decoration: none;">
-                                                        ${place.website.replace(/^https?:\/\//, ``)}
-                                                    </a>
-                                                </div>` : ``}
-                                            </div>
-                                        `;
-
+                                    marker.addListener("click", function() {
+                                        var content = generateInfoWindowContent(place);
                                         infowindow.setContent(content);
                                         infowindow.open(map, marker);
                                     });
 
+                                    markers.push(marker);
                                     bounds.extend(place.geometry.location);
                                     pinnedLocationsCount++;
                                 }
                             });
 
                             map.fitBounds(bounds);
+                            updateInfo(pinnedLocationsCount);
 
-                            // Update the info div with the number of pinned locations
-                            if (document.getElementById("' . esc_js($unique_id) . '-info")) {
-                                document.getElementById("' . esc_js($unique_id) . '-info").innerHTML = `
-                                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">Search Results</div>
-                                    <div style="color: #666;">Number of pinned locations: ${pinnedLocationsCount}</div>
-                                `;
-                            }
-
-                            // Handle pagination (if there are more results)
                             if (pagination && pagination.hasNextPage) {
-                                setTimeout(() => pagination.nextPage(), 2000); // Delay to avoid quota issues
+                                setTimeout(() => pagination.nextPage(), 2000);
                             }
                         } else {
                             console.error("No locations found: " + status);
-                            if (document.getElementById("' . esc_js($unique_id) . '-info")) {
-                                document.getElementById("' . esc_js($unique_id) . '-info").innerHTML = `
-                                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">Search Results</div>
-                                    <div style="color: #666;">No locations found.</div>
-                                `;
-                            }
+                            updateInfo(0, true);
                         }
                     });
                 }
 
-                searchLocations();
+                function generateInfoWindowContent(place) {
+                    var content = `<div style="font-family: Arial, sans-serif; padding: 10px; max-width: 250px;">`;
+                    if (place.photos && place.photos.length > 0) {
+                        content += `<div style="margin-bottom: 10px;">
+                                        <img src="${place.photos[0].getUrl({maxWidth: 200, maxHeight: 200})}" 
+                                            alt="${place.name}" 
+                                            style="width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
+                                    </div>`;
+                    }
+                    content += `<div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">${place.name}</div>
+                                <div style="color: #666; margin-bottom: 10px;">${place.formatted_address}</div>`;
+                    if (place.rating) {
+                        content += `<div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+                                        ⭐ <span>${place.rating}</span>
+                                    </div>`;
+                    }
+                    if (place.formatted_phone_number) {
+                        content += `<div><strong>Phone:</strong> ${place.formatted_phone_number}</div>`;
+                    }
+                    
+                    content += `</div>`;
+                    return content;
+                }
+
+                function updateInfo(count, isError = false) {
+                    var infoDiv = document.getElementById("' . $unique_id . '-info");
+                    if (infoDiv) {
+                        if (isError) {
+                            infoDiv.innerHTML = `<div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">Search Results</div>
+                                                <div style="color: #666;">No locations found.</div>`;
+                        } else {
+                            infoDiv.innerHTML = `<div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">Search Results</div>
+                                                <div style="color: #666;">Number of pinned locations: ${count}</div>`;
+                        }
+                    }
+                }
+
+                window.searchLocations = searchLocations;
+                searchLocations("' . $location_query . '");
+
+                ' . $filter_script . '
             }
 
-            // Initialize the map when the window loads
-            window.onload = initMap' . esc_js($unique_id) . ';
-
-            // Initialize the map when the Elementor editor is loaded or updated
-            jQuery(window).on("elementor/frontend/init", function () {
-                elementorFrontend.hooks.addAction("frontend/element_ready/amfm_maps.default", function () {
-                    initMap' . esc_js($unique_id) . '();
-                });
+            jQuery(document).ready(function($) {
+                initMap' . $unique_id . '();
             });
         </script>';
     }
-
 }

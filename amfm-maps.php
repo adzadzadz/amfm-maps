@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AMFM Maps
  * Description: A custom Elementor module to display various maps and elements.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author:            Adrian T. Saycon
  * Author URI:        https://adzjo.online/adz/
  * License:           GPL-2.0+
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define version
-define( 'AMFM_MAPS_VERSION', '1.2.0' );
+define( 'AMFM_MAPS_VERSION', '1.3.0' );
 define( 'AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc' );
 
 // Check if Elementor is installed and active
@@ -57,15 +57,16 @@ function amfm_maps_init() {
 
     // Enqueue scripts and styles
     function enqueue_amfm_maps_assets() {
-        wp_enqueue_style( 'amfm-maps-style', plugins_url( 'assets/css/style.css', __FILE__ ), array(), random_int(000,999) );
+        wp_enqueue_style( 'amfm-maps-style', plugins_url( 'assets/css/style.css', __FILE__ ), array(), AMFM_MAPS_VERSION );
 
-        if ( ! wp_script_is( 'google-maps', 'enqueued' ) ) {
-            wp_enqueue_script( 'amfm-google-maps', 'https://maps.googleapis.com/maps/api/js?key=' . AMFM_MAPS_API_KEY . '&loading=async&libraries=places', array(), null, true );
-        }
-        if ( ! wp_script_is( 'gmaps', 'enqueued' ) ) {
-            wp_enqueue_script( 'amfm-gmaps', 'https://cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.25/gmaps.min.js', array( 'amfm-google-maps' ), false, true );
-        }
-        wp_enqueue_script( 'amfm-maps-script', plugins_url( 'assets/js/script.js', __FILE__ ), array( 'amfm-gmaps' ), AMFM_MAPS_VERSION, true );
+        wp_enqueue_script( 'amfm-maps-script', plugins_url( 'assets/js/script.js', __FILE__ ), array( 'jquery' ), AMFM_MAPS_VERSION, true );
+
+        // if ( ! wp_script_is( 'google-maps', 'enqueued' ) ) {
+            wp_enqueue_script( 'amfm-google-maps', 'https://maps.googleapis.com/maps/api/js?key=' . AMFM_MAPS_API_KEY . '&loading=async&libraries=places', array(), null, false );
+        // }
+        // if ( ! wp_script_is( 'gmaps', 'enqueued' ) ) {
+            // wp_enqueue_script( 'amfm-gmaps', 'https://cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.25/gmaps.min.js', array(), null, false );
+        // }
     }
 
     // Hook to enqueue assets
