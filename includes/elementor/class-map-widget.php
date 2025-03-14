@@ -249,10 +249,15 @@ class MapWidget extends Widget_Base
                                         title: place.name
                                     });
 
-                                    marker.addListener("click", function() {
-                                        var content = generateInfoWindowContent(place);
-                                        infowindow.setContent(content);
-                                        infowindow.open(map, marker);
+                                     // Fetch full place details
+                                    service.getDetails({ placeId: place.place_id, fields: ["name", "formatted_address", "formatted_phone_number", "website", "photos", "rating"] }, function(details, status) {
+                                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                                            marker.addListener("click", function() {
+                                                var content = generateInfoWindowContent(details);
+                                                infowindow.setContent(content);
+                                                infowindow.open(map, marker);
+                                            });
+                                        }
                                     });
 
                                     markers.push(marker);
@@ -275,26 +280,47 @@ class MapWidget extends Widget_Base
                 }
 
                 function generateInfoWindowContent(place) {
-                    var content = `<div style="font-family: Arial, sans-serif; padding: 10px; max-width: 250px;">`;
-                    if (place.photos && place.photos.length > 0) {
-                        content += `<div style="margin-bottom: 10px;">
-                                        <img src="${place.photos[0].getUrl({maxWidth: 200, maxHeight: 200})}" 
-                                            alt="${place.name}" 
-                                            style="width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
-                                    </div>`;
-                    }
-                    content += `<div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">${place.name}</div>
-                                <div style="color: #666; margin-bottom: 10px;">${place.formatted_address}</div>`;
-                    if (place.rating) {
-                        content += `<div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
-                                        ⭐ <span>${place.rating}</span>
-                                    </div>`;
-                    }
-                    if (place.formatted_phone_number) {
-                        content += `<div><strong>Phone:</strong> ${place.formatted_phone_number}</div>`;
-                    }
-                    
-                    content += `</div>`;
+                    var content = `
+                        <div style="font-family: Arial, sans-serif; padding: 10px; max-width: 300px; line-height: 1.6;">
+                            
+                            <!-- Address -->
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <i class="fas fa-map-marker-alt" style="color: #007BFF;"></i>
+                                <span style="font-size: 14px; color: #333;">${place.formatted_address || "Address not available"}</span>
+                            </div>
+                            
+                            <!-- Located in -->
+                            ${place.vicinity ? `
+                            <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                                Located in: <strong>${place.vicinity}</strong>
+                            </div>` : ""}
+                            
+                            <!-- Opening Hours -->
+                            ${place.opening_hours && place.opening_hours.weekday_text ? `
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <i class="far fa-clock" style="color: #28a745;"></i>
+                                <span style="font-size: 14px; color: green;">${place.opening_hours.open_now ? "Open now" : "Closed"}</span>
+                            </div>` : ""}
+                            
+                            <!-- Website -->
+                            ${place.website ? `
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                <i class="fas fa-globe" style="color: #007BFF;"></i>
+                                <a href="${place.website}" target="_blank" style="font-size: 14px; color: #007BFF; text-decoration: none;">
+                                    ${new URL(place.website).hostname}
+                                </a>
+                            </div>` : ""}
+                            
+                            <!-- Phone Number -->
+                            ${place.formatted_phone_number ? `
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-phone-alt" style="color: #007BFF;"></i>
+                                <a href="tel:${place.international_phone_number}" style="font-size: 14px; color: #007BFF; text-decoration: none;">
+                                    ${place.formatted_phone_number}
+                                </a>
+                            </div>` : ""}
+                        </div>
+                    `;
                     return content;
                 }
 
