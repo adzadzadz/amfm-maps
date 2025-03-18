@@ -139,6 +139,12 @@ amfm.initMap = function (settings) {
                         ${place.formatted_phone_number}
                     </a>
                 </div>` : ""}
+                <!-- Rating -->
+                ${place.rating ? `
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                    <i class="fas fa-star" style="color: #ffc107;"></i>
+                    <span style="font-size: 14px; color: #ffc107;">${place.rating}</span>
+                </div>` : ""}
             </div>
         `;
         return content;
