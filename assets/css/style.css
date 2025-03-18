@@ -31,3 +31,72 @@
     height: auto;
     display: block;
 }
+
+/* Photo Slider */
+.amfm-maps-photo-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    touch-action: pan-y; /* Prevent vertical scrolling interference */
+    display: block; /* Ensure the slider container is visible */
+    overflow: hidden; /* Prevent overflow issues */
+}
+
+.amfm-maps-photo-slide {
+    position: relative; /* Change from absolute to relative for Owl Carousel */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: block; /* Ensure slides are displayed */
+    transition: transform 0.5s ease-in-out;
+}
+
+.amfm-maps-photo-slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.amfm-maps-photo-slider .owl-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+}
+
+.amfm-maps-photo-slider .owl-nav button {
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff; /* Change nav button color to white */
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Adjust dots position */
+.amfm-maps-photo-slider .owl-dots {
+    position: absolute; /* Position dots inside the image */
+    bottom: 5px; /* Add 5px margin before the edge */
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 100%;
+    margin: 0; /* Remove margin to keep dots inside */
+}
+
+.amfm-maps-photo-slider .owl-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background: #ccc;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.amfm-maps-photo-slider .owl-dot.active {
+    background: #fff;
+}

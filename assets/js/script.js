@@ -89,24 +89,24 @@ amfm.initMap = function (settings) {
 
     function generateInfoWindowContent(place) {
         var photos = place.photos || [];
-        var photoList = '';
+        var photoSlider = '';
 
         if (photos.length > 0) {
-            photoList = '<div class="amfm-maps-photo-list">';
-            photos.forEach(function (photo, index) {
+            photoSlider = '<div class="amfm-maps-photo-slider owl-carousel">';
+            photos.forEach(function (photo) {
                 var photoUrl = photo.getUrl({ maxWidth: 300, maxHeight: 200 });
-                photoList += `<div class="amfm-maps-photo-item">
-                                <img src="${photoUrl}" alt="Photo ${index + 1}" style="width: 100%; height: auto;">
-                              </div>`;
+                photoSlider += `<div class="amfm-maps-photo-slide">
+                                    <img src="${photoUrl}" alt="Photo" style="width: 100%; height: auto;">
+                                </div>`;
             });
-            photoList += '</div>';
+            photoSlider += '</div>';
         }
 
         var content = `
             <div style="font-family: Arial, sans-serif; padding: 10px; max-width: 300px; line-height: 1.6;">
                 <!-- Name -->
                 <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">${place.name}</div>
-                ${photoList}
+                ${photoSlider}
                 <!-- Address -->
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
                     <i class="fas fa-map-marker-alt" style="color: #007BFF;"></i>
@@ -143,6 +143,38 @@ amfm.initMap = function (settings) {
         `;
         return content;
     }
+
+    amfm.initOwlCarousel = function () {
+        jQuery('.amfm-maps-photo-slider').each(function () {
+            var $slider = jQuery(this);
+
+            // Debug: Log if the slider has images
+            console.log('Initializing Owl Carousel for:', $slider);
+            console.log('Images found:', $slider.find('img').length);
+
+            // Wait for images to load before initializing Owl Carousel
+            $slider.imagesLoaded(function () {
+                $slider.owlCarousel({
+                    items: 1,
+                    loop: true,
+                    nav: true,
+                    navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
+                    dots: true,
+                    autoplay: true,
+                    autoplayTimeout: 3000,
+                    autoplayHoverPause: true
+                });
+
+                // Debug: Log after initialization
+                console.log('Owl Carousel initialized for:', $slider);
+            });
+        });
+    };
+
+    // Initialize Owl Carousel after InfoWindow content is rendered
+    google.maps.event.addListener(infowindow, 'domready', function () {
+        amfm.initOwlCarousel();
+    });
 
     function updateInfo(count, isError = false) {
         var infoDiv = document.getElementById(unique_id + '-info');
