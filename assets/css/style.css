@@ -12,3 +12,22 @@
 .elementor-button-wrapper:has(.amfm-col-3) {
     width: 33.333%;
 }
+
+
+/* Photos */
+.amfm-maps-photo-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.amfm-maps-photo-item {
+    flex: 1 1 calc(33.333% - 10px);
+    box-sizing: border-box;
+}
+
+.amfm-maps-photo-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
