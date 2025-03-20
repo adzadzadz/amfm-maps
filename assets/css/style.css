@@ -36,25 +36,34 @@
 .amfm-maps-photo-slider {
     position: relative;
     width: 100%;
+    max-width: 400px;
+    /* Match the max width of the dialog box */
+    margin: 0 auto 15px;
+    /* Center the slider and add bottom margin */
     overflow: hidden;
-    touch-action: pan-y; /* Prevent vertical scrolling interference */
-    display: block; /* Ensure the slider container is visible */
-    overflow: hidden; /* Prevent overflow issues */
+    touch-action: pan-y;
+    /* Prevent vertical scrolling interference */
 }
 
 .amfm-maps-photo-slide {
-    position: relative; /* Change from absolute to relative for Owl Carousel */
+    position: relative;
+    /* Change from absolute to relative for Owl Carousel */
     top: 0;
     left: 0;
     width: 100%;
-    height: auto;
-    display: block; /* Ensure slides are displayed */
+    height: 100%;
+    /* Ensure slides take the full height of the slider */
+    display: block;
+    /* Ensure slides are displayed */
     transition: transform 0.5s ease-in-out;
 }
 
 .amfm-maps-photo-slide img {
     width: 100%;
     height: auto;
+    /* Remove height limitation */
+    object-fit: cover;
+    /* Ensure the image scales properly without distortion */
     display: block;
 }
 
@@ -69,22 +78,28 @@
 
 .amfm-maps-photo-slider .owl-nav button {
     background: rgba(0, 0, 0, 0.5);
-    color: #fff; /* Change nav button color to white */
+    color: rgba(255, 255, 255, 0.8) !important;
+    /* Change nav button color to white */
     border: none;
     padding: 5px 10px;
+    margin-left: 5px;
+    margin-right: 5px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 26px !important;
 }
 
 /* Adjust dots position */
 .amfm-maps-photo-slider .owl-dots {
-    position: absolute; /* Position dots inside the image */
-    bottom: 5px; /* Add 5px margin before the edge */
+    position: absolute;
+    /* Position dots inside the image */
+    bottom: 5px;
+    /* Add 5px margin before the edge */
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     width: 100%;
-    margin: 0; /* Remove margin to keep dots inside */
+    margin: 0;
+    /* Remove margin to keep dots inside */
 }
 
 .amfm-maps-photo-slider .owl-dot {
@@ -92,11 +107,117 @@
     width: 10px;
     height: 10px;
     margin: 0 5px;
-    background: #ccc;
+    background: #ccc !important;
     border-radius: 50%;
     cursor: pointer;
 }
 
 .amfm-maps-photo-slider .owl-dot.active {
-    background: #fff;
+    background: #fff !important;
+}
+
+
+.amfm-maps-info-wrapper {
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 16px 16px 24px;
+}
+
+
+/* Drawer styles for mobile full-screen mode */
+@media (max-width: 768px) {
+
+    /* Drawer overlay */
+    .amfm-drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none; /* Ensure it is hidden by default */
+    }
+
+    .amfm-drawer-overlay.visible {
+        display: block; /* Show overlay when "visible" class is added */
+    }
+
+    /* Drawer styles */
+    .amfm-drawer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #fff;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transform: translateY(100%); /* Hide drawer by default */
+        transition: transform 0.3s ease-in-out;
+        padding: 0; /* Remove padding from the drawer */
+    }
+
+    .amfm-drawer.open {
+        transform: translateY(0); /* Slide drawer up when "open" class is added */
+    }
+
+    /* Drawer content */
+    .amfm-drawer-content {
+        padding: 20px; /* Add padding only to the text content */
+    }
+
+    /* Drawer close button */
+    .amfm-drawer-close {
+        position: fixed; /* Fix the close button in the upper-right corner */
+        top: 10px;
+        right: 10px;
+        background-color: rgb(0, 45, 107, 1) !important;
+        border: none;
+        font-size: 28px !important; /* Increase the font size for a larger "x" */
+        color: #000; /* Set the "x" color to black */
+        cursor: pointer;
+        z-index: 1100; /* Ensure the close button is above the drawer */
+        padding: 6px 12px 3px !important;
+        line-height: 1em !important;
+    }
+
+    .amfm-drawer-content {
+        padding: 0;
+    }
+
+    /* Drawer image styles for mobile */
+    .amfm-maps-photo-slider {
+        position: relative;
+        width: 100%; /* Fit the screen width */
+        max-width: 100%; /* Ensure it doesn't exceed the screen width */
+        margin: 0; /* Remove margin to make the image stick to the edge */
+        overflow: hidden;
+        touch-action: pan-y;
+        height: auto; /* Allow height to adjust dynamically */
+    }
+
+    .amfm-maps-photo-slide img {
+        width: 100%; /* Fit the screen width */
+        max-height: 250px; /* Limit the height to 250px */
+        object-fit: cover; /* Ensure the image scales properly without distortion */
+        display: block;
+    }
+}
+
+/* Website button styles */
+.amfm-website-button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: rgb(0, 45, 107, 1); /* Match the close button background color */
+    color: #fff !important; /* White text color */
+    text-decoration: none; /* Remove underline */
+    font-size: 14px;
+    font-weight: bold;
+    /* border-radius: 5px; */
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.amfm-website-button:hover {
+    background-color: rgba(0, 45, 107, 0.8); /* Slightly darker on hover */
 }

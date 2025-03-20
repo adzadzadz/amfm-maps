@@ -1,5 +1,40 @@
 jQuery(document).ready(function ($) {
     console.log('AMFM Maps');
+
+    // Ensure the drawer container exists
+    if (!$('#amfm-drawer').length) {
+        jQuery('body').append(`
+            <div id="amfm-drawer-overlay" class="amfm-drawer-overlay"></div>
+            <div id="amfm-drawer" class="amfm-drawer">
+                <button id="amfm-drawer-close" class="amfm-drawer-close">&times;</button>
+                <div id="amfm-drawer-content" class="amfm-drawer-content"></div>
+            </div>
+        `);
+
+        // Close drawer on button click
+        jQuery('#amfm-drawer-close').on('click', function () {
+            closeDrawer();
+        });
+
+        // Close drawer when clicking outside the drawer
+        jQuery('#amfm-drawer-overlay').on('click', function () {
+            closeDrawer();
+        });
+    }
+
+    function closeDrawer() {
+        jQuery('#amfm-drawer').removeClass('open');
+        jQuery('#amfm-drawer-overlay').removeClass('visible');
+    }
+
+    function openDrawer(content) {
+        jQuery('#amfm-drawer-content').html(content);
+        jQuery('#amfm-drawer').addClass('open'); // Ensure the "open" class is added
+        jQuery('#amfm-drawer-overlay').addClass('visible'); // Ensure the overlay is visible
+    }
+
+    // Expose openDrawer globally for debugging
+    window.openDrawer = openDrawer;
 });
 
 var amfm = {};
@@ -17,7 +52,8 @@ amfm.initMap = function (settings) {
     var centerPoint = { lat: 39.8283, lng: -98.5795 };
     var map = new google.maps.Map(document.getElementById(unique_id), {
         center: centerPoint,
-        zoom: 4
+        zoom: 4,
+        mapTypeControl: false // Disable satellite and map type options
     });
 
     var infowindow = new google.maps.InfoWindow();
@@ -62,8 +98,11 @@ amfm.initMap = function (settings) {
                             if (status === google.maps.places.PlacesServiceStatus.OK) {
                                 marker.addListener("click", function () {
                                     var content = generateInfoWindowContent(details);
-                                    infowindow.setContent(content);
-                                    infowindow.open(map, marker);
+                                    if (isMobile()) {
+                                        openDrawer(content);
+                                    } else {
+                                        openPopup(content, marker);
+                                    }
                                 });
                             }
                         });
@@ -87,6 +126,24 @@ amfm.initMap = function (settings) {
         });
     }
 
+    function generateStars(rating) {
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+        const emptyStars = 5 - fullStars - halfStar;
+
+        let starsHtml = '';
+        for (let i = 0; i < fullStars; i++) {
+            starsHtml += '<i class="fas fa-star" style="color: #ffc107;"></i>';
+        }
+        if (halfStar) {
+            starsHtml += '<i class="fas fa-star-half-alt" style="color: #ffc107;"></i>';
+        }
+        for (let i = 0; i < emptyStars; i++) {
+            starsHtml += '<i class="far fa-star" style="color: #ffc107;"></i>';
+        }
+        return starsHtml;
+    }
+
     function generateInfoWindowContent(place) {
         var photos = place.photos || [];
         var photoSlider = '';
@@ -103,51 +160,63 @@ amfm.initMap = function (settings) {
         }
 
         var content = `
-            <div style="font-family: Arial, sans-serif; padding: 10px; max-width: 300px; line-height: 1.6;">
-                <!-- Name -->
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">${place.name}</div>
+            <div style="line-height: 1.6;">
                 ${photoSlider}
-                <!-- Address -->
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                    <i class="fas fa-map-marker-alt" style="color: #007BFF;"></i>
-                    <span style="font-size: 14px; color: #333;">${place.formatted_address || "Address not available"}</span>
+                <div class="amfm-maps-info-wrapper">
+                    <!-- Name -->
+                    <div style="font-size: 18px; font-weight: bold; margin-top: 10px;">${place.name}</div>
+                    <!-- Rating -->
+                    ${place.rating ? `
+                    <div style="font-size: 14px; color: #ffc107; margin-top: 5px;">
+                        ${generateStars(place.rating)}
+                    </div>` : ""}
+                    <!-- Address -->
+                    <div style="font-size: 14px; color: #555; margin-top: 5px;">${place.formatted_address || "Address not available"}</div>
+                    <!-- Phone Number -->
+                    ${place.formatted_phone_number ? `
+                    <div style="font-size: 16px; color: #007BFF; margin-top: 5px;">
+                        <i class="fas fa-phone-alt"></i> <a href="tel:${place.international_phone_number}" style="text-decoration: none; color: #007BFF;">${place.formatted_phone_number}</a>
+                    </div>` : ""}
+                    <!-- Website -->
+                    ${place.website ? `
+                    <div style="margin-top: 10px;">
+                        <a href="${place.website}" target="_blank" class="amfm-website-button">
+                            View Location
+                        </a>
+                    </div>` : ""}
                 </div>
-                <!-- Located in -->
-                ${place.vicinity ? `
-                <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
-                    Located in: <strong>${place.vicinity}</strong>
-                </div>` : ""}
-                <!-- Opening Hours -->
-                ${place.opening_hours && place.opening_hours.weekday_text ? `
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                    <i class="far fa-clock" style="color: #28a745;"></i>
-                    <span style="font-size: 14px; color: green;">${place.opening_hours.open_now ? "Open now" : "Closed"}</span>
-                </div>` : ""}
-                <!-- Website -->
-                ${place.website ? `
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                    <i class="fas fa-globe" style="color: #007BFF;"></i>
-                    <a href="${place.website}" target="_blank" style="font-size: 14px; color: #007BFF; text-decoration: none;">
-                        ${new URL(place.website).hostname}
-                    </a>
-                </div>` : ""}
-                <!-- Phone Number -->
-                ${place.formatted_phone_number ? `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-phone-alt" style="color: #007BFF;"></i>
-                    <a href="tel:${place.international_phone_number}" style="font-size: 14px; color: #007BFF; text-decoration: none;">
-                        ${place.formatted_phone_number}
-                    </a>
-                </div>` : ""}
-                <!-- Rating -->
-                ${place.rating ? `
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                    <i class="fas fa-star" style="color: #ffc107;"></i>
-                    <span style="font-size: 14px; color: #ffc107;">${place.rating}</span>
-                </div>` : ""}
             </div>
         `;
         return content;
+    }
+
+    function openDrawer(content) {
+        jQuery('#amfm-drawer-content').html(content);
+        jQuery('#amfm-drawer').addClass('open');
+        jQuery('#amfm-drawer-overlay').addClass('visible');
+
+        // Initialize Owl Carousel for the photos with mergeFit enabled
+        jQuery('.amfm-maps-photo-slider').owlCarousel({
+            items: 1,
+            loop: true,
+            nav: true,
+            navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
+            dots: true,
+            autoplay: true,
+            autoplayTimeout: 3000,
+            autoplayHoverPause: true,
+            merge: true, // Enable merging of items
+            mergeFit: true // Ensure items fit within the carousel container
+        });
+    }
+
+    function openPopup(content, marker) {
+        infowindow.setContent(content);
+        infowindow.open(map, marker);
+    }
+
+    function isMobile() {
+        return window.innerWidth <= 768; // Define mobile screen size
     }
 
     amfm.initOwlCarousel = function () {
