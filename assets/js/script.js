@@ -174,12 +174,12 @@ amfm.initMap = function (settings) {
                     <div style="font-size: 14px; color: #555; margin-top: 5px;">${place.formatted_address || "Address not available"}</div>
                     <!-- Phone Number -->
                     ${place.formatted_phone_number ? `
-                    <div style="font-size: 16px; color: #007BFF; margin-top: 5px;">
+                    <div class="phone-number-wrapper" style="font-size: 16px; color: #007BFF; margin-top: 5px;">
                         <i class="fas fa-phone-alt"></i> <a href="tel:${place.international_phone_number}" style="text-decoration: none; color: #007BFF;">${place.formatted_phone_number}</a>
                     </div>` : ""}
                     <!-- Website -->
                     ${place.website ? `
-                    <div style="margin-top: 10px;">
+                    <div class="website-link-wrapper"">
                         <a href="${place.website}" target="_blank" class="amfm-website-button">
                             View Location
                         </a>
@@ -191,28 +191,108 @@ amfm.initMap = function (settings) {
     }
 
     function openDrawer(content) {
-        jQuery('#amfm-drawer-content').html(content);
+        jQuery('#amfm-drawer-content').html(`
+            <div class="amfm-loading-spinner"></div> <!-- Add loading spinner -->
+            ${content}
+        `);
         jQuery('#amfm-drawer').addClass('open');
         jQuery('#amfm-drawer-overlay').addClass('visible');
 
-        // Initialize Owl Carousel for the photos with mergeFit enabled
-        jQuery('.amfm-maps-photo-slider').owlCarousel({
-            items: 1,
-            loop: true,
-            nav: true,
-            navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
-            dots: true,
-            autoplay: true,
-            autoplayTimeout: 3000,
-            autoplayHoverPause: true,
-            merge: true, // Enable merging of items
-            mergeFit: true // Ensure items fit within the carousel container
+        // Initialize Owl Carousel after images are loaded
+        jQuery('.amfm-maps-photo-slider').imagesLoaded(function () {
+            jQuery('.amfm-loading-spinner').remove(); // Remove loading spinner
+            jQuery('.amfm-maps-photo-slider').owlCarousel({
+                items: 1,
+                loop: true,
+                nav: true,
+                navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
+                dots: true,
+                autoplay: true,
+                autoplayTimeout: 3000,
+                autoplayHoverPause: true,
+                merge: true,
+                mergeFit: true
+            });
         });
     }
 
     function openPopup(content, marker) {
-        infowindow.setContent(content);
-        infowindow.open(map, marker);
+        if (isMobile()) {
+            infowindow.setContent(`
+                <div style="overflow: visible; max-width: 380px;">
+                    <div class="amfm-loading-spinner"></div> <!-- Add loading spinner -->
+                    ${content}
+                </div>
+            `);
+            infowindow.open(map, marker);
+
+            // Initialize Owl Carousel after images are loaded
+            jQuery('.amfm-maps-photo-slider').imagesLoaded(function () {
+                jQuery('.amfm-loading-spinner').remove(); // Remove loading spinner
+                jQuery('.amfm-maps-photo-slider').owlCarousel({
+                    items: 1,
+                    loop: true,
+                    nav: true,
+                    navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
+                    dots: true,
+                    autoplay: true,
+                    autoplayTimeout: 3000,
+                    autoplayHoverPause: true
+                });
+            });
+        } else {
+            const mapContainer = document.getElementById(unique_id);
+            if (!mapContainer.querySelector('.amfm-desktop-drawer')) {
+                mapContainer.insertAdjacentHTML('beforeend', `
+                    <div class="amfm-desktop-drawer-overlay"></div> <!-- Add overlay -->
+                    <div class="amfm-desktop-drawer">
+                        <div class="amfm-desktop-drawer-content">
+                            <div class="amfm-loading-spinner"></div> <!-- Add loading spinner -->
+                        </div>
+                    </div>
+                `);
+
+                // Close drawer when clicking outside the drawer
+                mapContainer.querySelector('.amfm-desktop-drawer-overlay').addEventListener('click', function () {
+                    closeDesktopDrawer();
+                });
+            }
+
+            const drawer = mapContainer.querySelector('.amfm-desktop-drawer');
+            const drawerContent = drawer.querySelector('.amfm-desktop-drawer-content');
+            drawerContent.innerHTML = `
+                <div class="amfm-loading-spinner"></div> <!-- Add loading spinner -->
+                ${content}
+            `;
+            drawer.classList.add('open');
+            mapContainer.querySelector('.amfm-desktop-drawer-overlay').classList.add('visible');
+
+            // Initialize Owl Carousel after images are loaded
+            jQuery('.amfm-maps-photo-slider').imagesLoaded(function () {
+                jQuery('.amfm-loading-spinner').remove(); // Remove loading spinner
+                jQuery('.amfm-maps-photo-slider').owlCarousel({
+                    items: 1,
+                    loop: true,
+                    nav: true,
+                    navText: ['<i class="fas fa-chevron-left"></i>', '<i class="fas fa-chevron-right"></i>'],
+                    dots: true,
+                    autoplay: true,
+                    autoplayTimeout: 3000,
+                    autoplayHoverPause: true
+                });
+            });
+        }
+    }
+
+    function closeDesktopDrawer() {
+        const drawer = document.querySelector('.amfm-desktop-drawer');
+        const overlay = document.querySelector('.amfm-desktop-drawer-overlay');
+        if (drawer) {
+            drawer.classList.remove('open');
+        }
+        if (overlay) {
+            overlay.classList.remove('visible');
+        }
     }
 
     function isMobile() {
