@@ -61,7 +61,7 @@ amfm.initMap = function (settings) {
     var markers = [];
     var pinnedLocationsCount = 0;
 
-    function searchLocations(location_query, nextPageToken = null) {
+    function searchLocations(location_query, filter = null, nextPageToken = null) {
         // Clear existing markers
         markers.forEach(function (marker) {
             marker.setMap(null);
@@ -85,6 +85,62 @@ amfm.initMap = function (settings) {
 
         service.textSearch(request, function (results, status, pagination) {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
+                console.log("Locations found:", results);
+
+                // get filter value if not null, replace spaces with _ and convert to lowercase
+                if (filter) {
+                    filter = filter.replace(/\s/g, "_").toLowerCase();
+                }
+
+                console.log("Filter:", filter);
+
+                let filters = {
+                    female_only_housing: [
+                        // Virginia
+                        "7803 Rebel Dr, Annandale, VA 22003",
+                        // California
+                        "31101 Paseo De Valencia, San Juan Capistrano, CA 92675",
+                        "26065 Waterwheel Pl, Laguna Hills, CA 92653",
+                        "24262 Sunnybrook Cir, Lake Forest, CA 92630",
+                        "6477 Goldenbush Dr, Carlsbad, CA 92011",
+                        "3875 Peony Dr, Fallbrook, CA 92028"
+                    ],
+                    male_only_housing: [
+                        // Virginia
+                        "10010 Lawyers Rd, Vienna, VA 22181",
+                        // California
+                        "33721 Street of the Blue Lantern, Dana Point, CA 92629",
+                        "34142 Crystal Lantern, Dana Point, CA 92629",
+                        "26972 Via Banderas, San Juan Capistrano, CA 92675",
+                        "26006 Campeon, Laguna Niguel, CA 92677",
+                        "24171 Grayston Dr, Lake Forest, CA 92630",
+                        "1155 Hoover St, Carlsbad, CA 92008",
+                        "197 N Ridge Dr, Fallbrook, CA 92028"
+                    ],
+                    mixed_housing: [
+                        // Virginia
+                        "7905 Derbyshire Ln, Fairfax Station, VA 22039", 
+                        "11301 Kellie Jean Ct, Great Falls, VA 22066", 
+                        "10305 Browns Mill Rd, Vienna, VA 22182", 
+                        "9947 Corsica St, Vienna, VA 22181",
+                        // California
+                        "30310 Rancho Viejo Rd, San Juan Capistrano, CA 92675",
+                        "Michelle House"
+                    ]
+                };
+
+                // filter results
+                if (filter) {
+                    results = results.filter(function (result) {
+                        const normalizedResultAddress = result.formatted_address.toLowerCase();
+                        return filters[filter].some(function (filterAddress) {
+                            return normalizedResultAddress.includes(filterAddress.toLowerCase());
+                        });
+                    });
+                }
+
+                console.log("Filtered Locations:", results);
+
                 results.forEach(function (place) {
                     if (place.geometry && place.geometry.location) {
                         var marker = new google.maps.Marker({
@@ -113,7 +169,14 @@ amfm.initMap = function (settings) {
                     }
                 });
 
-                map.fitBounds(bounds);
+                if (results.length === 1) {
+                    // If only one location, set zoom to a closer view
+                    map.setCenter(results[0].geometry.location);
+                    map.setZoom(12); // Adjust zoom level for a closer view
+                } else {
+                    map.fitBounds(bounds);
+                }
+
                 updateInfo(pinnedLocationsCount);
 
                 if (pagination && pagination.hasNextPage) {
@@ -350,12 +413,13 @@ amfm.initMap = function (settings) {
     if (filter_class) {
         jQuery("." + filter_class).on("click", function () {
             let query = jQuery(this).data("query");
+            let filter = jQuery(this).data("filter");
 
             if (query) {
-                searchLocations(query);
+                searchLocations(query, filter || null);
             }
 
-            console.log("Filtering", query);
+            console.log("Filtering", query, filter || null);
         });
     }
 }
