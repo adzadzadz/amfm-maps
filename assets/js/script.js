@@ -187,6 +187,13 @@ amfm.initMap = function (settings) {
                     // If only one location, set zoom to a closer view
                     map.setCenter(results[0].geometry.location);
                     map.setZoom(12); // Adjust zoom level for a closer view
+                } else if (results.length > 1 && 4 > results.length) {
+                    map.fitBounds(bounds);
+
+                    // Zoom out slightly for better visibility of multiple results
+                    const listener = google.maps.event.addListenerOnce(map, 'bounds_changed', function () {
+                        map.setZoom(map.getZoom() - 1); // Zoom out by 1 level
+                    });
                 } else {
                     map.fitBounds(bounds);
                 }
