@@ -25,12 +25,22 @@ jQuery(document).ready(function ($) {
     function closeDrawer() {
         jQuery('#amfm-drawer').removeClass('open');
         jQuery('#amfm-drawer-overlay').removeClass('visible');
+        jQuery('body').off('click'); // Remove the body click event listener to prevent multiple bindings
     }
 
     function openDrawer(content) {
         jQuery('#amfm-drawer-content').html(content);
         jQuery('#amfm-drawer').addClass('open'); // Ensure the "open" class is added
         jQuery('#amfm-drawer-overlay').addClass('visible'); // Ensure the overlay is visible
+
+        // Close drawer when clicking anywhere in the body except the drawer itself
+        jQuery('body').on('click', function (event) {
+            const drawer = jQuery('#amfm-drawer');
+            const overlay = jQuery('#amfm-drawer-overlay');
+            if (!drawer.is(event.target) && drawer.has(event.target).length === 0) {
+                closeDrawer();
+            }
+        });
     }
 
     // Expose openDrawer globally for debugging
@@ -39,6 +49,12 @@ jQuery(document).ready(function ($) {
 
 var amfm = {};
 window.amfm = amfm;
+
+// Ensure global map storage object exists
+if (!window.amfmMaps) {
+    window.amfmMaps = {}; // Initialize global object to store map instances
+}
+
 amfm.initMap = function (settings) {
     var unique_id = settings.unique_id;
     var location_query = settings.location_query;
@@ -56,12 +72,39 @@ amfm.initMap = function (settings) {
         mapTypeControl: false // Disable satellite and map type options
     });
 
+    // Store the map instance in the global object
+    window.amfmMaps[unique_id] = {
+        map: map,
+        searchLocations: searchLocations // Expose searchLocations for this map instance
+    };
+
     var infowindow = new google.maps.InfoWindow();
     var bounds = new google.maps.LatLngBounds();
     var markers = [];
     var pinnedLocationsCount = 0;
 
     function searchLocations(location_query, filter = null, nextPageToken = null) {
+        // Retrieve filters JSON from the map container
+        const mapContainer = jQuery(`#${unique_id}`);
+        const filtersJson = mapContainer.data('filters-json');
+
+        console.log("filtersJson:", filtersJson, "Type:", typeof filtersJson);
+
+        let filters = {};
+
+        try {
+            // Ensure the JSON string is valid
+            if (typeof filtersJson === 'object') {
+                filters = filtersJson;
+            } else if (typeof filtersJson === 'string') {
+                filters = JSON.parse(filtersJson);
+            }
+        } catch (e) {
+            console.error('Invalid filters JSON:', filtersJson);
+        }
+
+        console.log("Filters:", filters);
+
         // Clear existing markers
         markers.forEach(function (marker) {
             marker.setMap(null);
@@ -87,54 +130,25 @@ amfm.initMap = function (settings) {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
                 console.log("Locations found:", results);
 
-                // get filter value if not null, replace spaces with _ and convert to lowercase
+                // Process filter if not null
+                let activeFilters = [];
                 if (filter) {
-                    filter = filter.replace(/\s/g, "_").toLowerCase();
+                    activeFilters = filter.split(",").map(f => f.trim().replace(/\s/g, "_").toLowerCase());
                 }
 
-                console.log("Filter:", filter);
+                console.log("Active Filters:", activeFilters);
 
-                let filters = {
-                    female_only_housing: [
-                        // Virginia
-                        "7803 Rebel Dr, Annandale, VA 22003",
-                        // California
-                        "31101 Paseo De Valencia, San Juan Capistrano, CA 92675",
-                        "26065 Waterwheel Pl, Laguna Hills, CA 92653",
-                        "24262 Sunnybrook Cir, Lake Forest, CA 92630",
-                        "6477 Goldenbush Dr, Carlsbad, CA 92011",
-                        "3875 Peony Dr, Fallbrook, CA 92028"
-                    ],
-                    male_only_housing: [
-                        // Virginia
-                        "10010 Lawyers Rd, Vienna, VA 22181",
-                        // California
-                        "33721 Street of the Blue Lantern, Dana Point, CA 92629",
-                        "34142 Crystal Lantern, Dana Point, CA 92629",
-                        "26972 Via Banderas, San Juan Capistrano, CA 92675",
-                        "26006 Campeon, Laguna Niguel, CA 92677",
-                        "24171 Grayston Dr, Lake Forest, CA 92630",
-                        "1155 Hoover St, Carlsbad, CA 92008",
-                        "197 N Ridge Dr, Fallbrook, CA 92028"
-                    ],
-                    mixed_housing: [
-                        // Virginia
-                        "7905 Derbyshire Ln, Fairfax Station, VA 22039", 
-                        "11301 Kellie Jean Ct, Great Falls, VA 22066", 
-                        "10305 Browns Mill Rd, Vienna, VA 22182", 
-                        "9947 Corsica St, Vienna, VA 22181",
-                        // California
-                        "30310 Rancho Viejo Rd, San Juan Capistrano, CA 92675",
-                        "Michelle House"
-                    ]
-                };
-
-                // filter results
-                if (filter) {
+                // Filter results based on active filters
+                if (activeFilters.length > 0) {
                     results = results.filter(function (result) {
-                        const normalizedResultAddress = result.formatted_address.toLowerCase();
-                        return filters[filter].some(function (filterAddress) {
-                            return normalizedResultAddress.includes(filterAddress.toLowerCase());
+                        const normalizedResultAddress = result.formatted_address?.toLowerCase() || "";
+                        return activeFilters.some(function (filterKey) {
+                            if (filters[filterKey]) {
+                                return filters[filterKey].some(function (filterAddress) {
+                                    return normalizedResultAddress.includes(filterAddress.toLowerCase());
+                                });
+                            }
+                            return false;
                         });
                     });
                 }
@@ -315,7 +329,7 @@ amfm.initMap = function (settings) {
                     </div>
                 `);
 
-                // Close drawer when clicking outside the drawer
+                // Close drawer when clicking the overlay
                 mapContainer.querySelector('.amfm-desktop-drawer-overlay').addEventListener('click', function () {
                     closeDesktopDrawer();
                 });
@@ -367,8 +381,8 @@ amfm.initMap = function (settings) {
             var $slider = jQuery(this);
 
             // Debug: Log if the slider has images
-            console.log('Initializing Owl Carousel for:', $slider);
-            console.log('Images found:', $slider.find('img').length);
+            // console.log('Initializing Owl Carousel for:', $slider);
+            // console.log('Images found:', $slider.find('img').length);
 
             // Wait for images to load before initializing Owl Carousel
             $slider.imagesLoaded(function () {
@@ -412,14 +426,43 @@ amfm.initMap = function (settings) {
 
     if (filter_class) {
         jQuery("." + filter_class).on("click", function () {
-            let query = jQuery(this).data("query");
-            let filter = jQuery(this).data("filter");
+            // Toggle active class for the clicked filter
+            jQuery(this).toggleClass("active");
 
-            if (query) {
-                searchLocations(query, filter || null);
+            // Collect all active filters for the associated map
+            let mapContainer = jQuery(this).closest(".amfm-map-container");
+            let mapId = mapContainer.find(".amfm-map-control").attr("id"); // Get the map's unique ID
+
+            if (mapId && window.amfmMaps[mapId]) {
+                let mapInstance = window.amfmMaps[mapId]; // Retrieve the map instance by ID
+
+                // Gather all active filters
+                let activeFilters = [];
+                mapContainer.find("." + filter_class + ".active").each(function () {
+                    let query = jQuery(this).data("query") || ""; // Ensure query is not undefined
+                    let filter = jQuery(this).data("filter") || ""; // Ensure filter is not undefined
+                    if (query || filter) {
+                        activeFilters.push({ query, filter });
+                    }
+                });
+
+                // Combine all active filters into a single query and filter
+                let combinedQuery = activeFilters.map(f => f.query).filter(q => q).join(" OR "); // Combine non-empty queries with "OR"
+                let combinedFilter = activeFilters.map(f => f.filter).filter(f => f).join(","); // Combine non-empty filters with a comma
+
+                // Call searchLocations with combined filters
+                if (combinedQuery) {
+                    mapInstance.searchLocations(combinedQuery, combinedFilter || null);
+                } else {
+                    mapInstance.searchLocations(location_query, combinedFilter || null); // Default to the original query if no active filters
+                }
+
+                console.log("Active Filters:", activeFilters);
+                console.log("Combined Query:", combinedQuery);
+                console.log("Combined Filter:", combinedFilter);
+            } else {
+                console.error("Map instance not found for ID:", mapId);
             }
-
-            console.log("Filtering", query, filter || null);
         });
     }
 }

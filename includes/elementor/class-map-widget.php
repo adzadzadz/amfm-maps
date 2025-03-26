@@ -13,7 +13,7 @@ class MapWidget extends Widget_Base
 {
     public function get_name()
     {
-        return 'amfm_maps';
+        return 'amfm_map_widget';
     }
 
     public function get_title()
@@ -23,12 +23,12 @@ class MapWidget extends Widget_Base
 
     public function get_icon()
     {
-        return 'eicon-google-maps';
+        return 'eicon-map-pin';
     }
 
     public function get_categories()
     {
-        return ['basic'];
+        return ['general'];
     }
 
     protected function _register_controls()
@@ -162,8 +162,54 @@ class MapWidget extends Widget_Base
                     'size' => 300,
                 ],
                 'selectors' => [
+                    '{{WRAPPER}}' => 'height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .elementor-widget-container' => 'height: {{SIZE}}{{UNIT}};',
                     '{{WRAPPER}} .amfm-map-control' => 'height: {{SIZE}}{{UNIT}};',
                 ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'map_min_height',
+            [
+                'label' => __('Min Height', 'amfm-maps'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['%', 'px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1200,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 300,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}}' => 'min-height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .elementor-widget-container' => 'min-height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-map-control' => 'min-height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+
+        $this->start_controls_section(
+            'map_settings',
+            [
+                'label' => __('Map Settings', 'amfm-maps'),
+                'tab' => Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_control(
+            'filters_json',
+            [
+                'label' => __('Filters JSON', 'amfm-maps'),
+                'type' => Controls_Manager::TEXTAREA,
+                'description' => __('Input a JSON object for filters. Example: {"female_only_housing": ["Address 1", "Address 2"], "male_only_housing": ["Address 3"]}', 'amfm-maps'),
+                'default' => '',
             ]
         );
 
@@ -181,17 +227,21 @@ class MapWidget extends Widget_Base
         $show_info = $settings['show_info'];
         $filter_class = esc_js($settings['filter_class']);
 
+        // Properly encode the filters JSON
+        $filters_json = !empty($settings['filters_json']) ? json_encode(json_decode($settings['filters_json'], true)) : '{}';
+
         // Generate a unique ID for this instance of the widget
         $unique_id = 'amfm_map_' . uniqid();
 
-        echo '<div id="' . esc_attr($unique_id) . '" class="amfm-map-control"></div>';
+        echo '<div id="' . esc_attr($unique_id) . '" class="amfm-map-control" data-filters-json="' . esc_attr($filters_json) . '" data-query="' . $location_query . '"></div>';
         if ($show_info === 'yes') {
             echo '<div id="' . esc_attr($unique_id) . '-info" class="amfm-map-info"></div>';
         }
 
         echo '<script>
             jQuery(document).ready(function($) {
-                amfm.initMap({
+                $(window).on("load", function() {
+                    amfm.initMap({
                     unique_id: "' . $unique_id . '",
                     location_query: "' . $location_query . '",
                     type: "' . $type . '",
@@ -200,6 +250,7 @@ class MapWidget extends Widget_Base
                     page_token: "' . $page_token . '",
                     show_info: "' . $show_info . '",
                     filter_class: "' . $filter_class . '"
+                    });
                 });
             });
         </script>';

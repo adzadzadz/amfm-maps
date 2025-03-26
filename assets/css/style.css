@@ -13,6 +13,11 @@
     width: 33.333%;
 }
 
+.amfm_maps_filter_multiple_buttons.active a {
+    background-color: #cc8f2c !important;
+    /* color: #fff; */
+}
+
 @media (min-width: 769px) {
     .amfm-drawer {
         display: none;

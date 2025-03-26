@@ -16,7 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define version
-define( 'AMFM_MAPS_VERSION', '1.5.0' );
+// define( 'AMFM_MAPS_VERSION', '1.5.0' );
+define( 'AMFM_MAPS_VERSION', random_int(000,999) );
 define( 'AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc' );
 
 // Check if Elementor is installed and active
@@ -70,7 +71,7 @@ function amfm_maps_init() {
 
         // Enqueue plugin-specific styles and scripts
         wp_enqueue_style( 'amfm-maps-style', plugins_url( 'assets/css/style.css', __FILE__ ), array(), AMFM_MAPS_VERSION );
-        wp_enqueue_script( 'amfm-maps-script', plugins_url( 'assets/js/script.js', __FILE__ ), array( 'jquery', 'owl-carousel-js', 'imagesloaded' ), AMFM_MAPS_VERSION, true );
+        wp_enqueue_script( 'amfm-maps-script', plugins_url( 'assets/js/script.js', __FILE__ ), array( 'jquery', 'owl-carousel-js', 'imagesloaded', 'amfm-google-maps' ), AMFM_MAPS_VERSION, true );
     }
 
     // Hook to enqueue assets
