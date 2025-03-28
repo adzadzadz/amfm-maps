@@ -204,11 +204,47 @@ class MapWidget extends Widget_Base
         );
 
         $this->add_control(
+            'use_custom_locations',
+            [
+                'label' => __('Use Custom Locations', 'amfm-maps'),
+                'type' => Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'amfm-maps'),
+                'label_off' => __('No', 'amfm-maps'),
+                'return_value' => 'yes',
+                'default' => 'no',
+            ]
+        );
+
+        $this->add_control(
+            'location_sets',
+            [
+                'label' => __('Location Sets (Comma Separated)', 'amfm-maps'),
+                'type' => Controls_Manager::TEXT,
+                'description' => __('Specify location sets from the filters JSON (e.g., "ca, va").', 'amfm-maps'),
+                'default' => '',
+                'condition' => [
+                    'use_custom_locations' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
             'filters_json',
             [
                 'label' => __('Filters JSON', 'amfm-maps'),
                 'type' => Controls_Manager::TEXTAREA,
                 'description' => __('Input a JSON object for filters. Example: {"female_only_housing": ["Address 1", "Address 2"], "male_only_housing": ["Address 3"]}', 'amfm-maps'),
+                'default' => '',
+            ]
+        );
+
+        // Update the Locations Filter control to accept JSON input
+        $this->add_control(
+            'locations_filter',
+            [
+                'label' => __('Locations Filter (JSON)', 'amfm-maps'),
+                'type' => Controls_Manager::TEXTAREA,
+                'description' => __('Input a JSON object for locations. Example: {"ca": [{"ChIJ_boBy1Tw3IARqizwIZQSOpU": "Address 1"}], "va": [{"ChIJ133tZr1JtokRlrZJ_rkvEVI": "Address 2"}]}', 'amfm-maps'),
                 'default' => '',
             ]
         );
@@ -226,6 +262,9 @@ class MapWidget extends Widget_Base
         $page_token = esc_js($settings['page_token']);
         $show_info = $settings['show_info'];
         $filter_class = esc_js($settings['filter_class']);
+        $use_custom_locations = $settings['use_custom_locations'];
+        $location_sets = esc_js($settings['location_sets']);
+        $locations_filter = !empty($settings['locations_filter']) ? json_encode(json_decode($settings['locations_filter'], true)) : '{}';
 
         // Properly encode the filters JSON
         $filters_json = !empty($settings['filters_json']) ? json_encode(json_decode($settings['filters_json'], true)) : '{}';
@@ -249,7 +288,11 @@ class MapWidget extends Widget_Base
                     fields: ' . $fields . ',
                     page_token: "' . $page_token . '",
                     show_info: "' . $show_info . '",
-                    filter_class: "' . $filter_class . '"
+                    filter_class: "' . $filter_class . '",
+                    use_custom_locations: "' . $use_custom_locations . '",
+                    location_sets: "' . $location_sets . '",
+                    filters_json: ' . $filters_json . ',
+                    locations_filter: ' . $locations_filter . '
                     });
                 });
             });

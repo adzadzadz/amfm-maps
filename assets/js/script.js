@@ -72,6 +72,9 @@ amfm.initMap = function (settings) {
         mapTypeControl: false // Disable satellite and map type options
     });
 
+    // Initialize the PlacesService
+    var service = new google.maps.places.PlacesService(map);
+
     // Store the map instance in the global object
     window.amfmMaps[unique_id] = {
         map: map,
@@ -83,131 +86,210 @@ amfm.initMap = function (settings) {
     var markers = [];
     var pinnedLocationsCount = 0;
 
-    function searchLocations(location_query, filter = null, nextPageToken = null) {
-        // Retrieve filters JSON from the map container
-        const mapContainer = jQuery(`#${unique_id}`);
-        const filtersJson = mapContainer.data('filters-json');
-
-        console.log("filtersJson:", filtersJson, "Type:", typeof filtersJson);
+    function searchLocations(location_query, filter = null, nextPageToken = null, activeLocationFilter = null) {
+        const locationsFilter = typeof settings.locations_filter === 'string' 
+            ? JSON.parse(settings.locations_filter) 
+            : settings.locations_filter; // Ensure locations_filter is parsed as an object
+        const filtersJson = settings.filters_json;
+        const useCustomLocations = settings.use_custom_locations === 'yes';
+        const locationSets = settings.location_sets?.split(',').map(set => set.trim().toLowerCase()) || [];
 
         let filters = {};
+        let locations = [];
 
         try {
-            // Ensure the JSON string is valid
-            if (typeof filtersJson === 'object') {
-                filters = filtersJson;
-            } else if (typeof filtersJson === 'string') {
-                filters = JSON.parse(filtersJson);
+            filters = typeof filtersJson === 'string' ? JSON.parse(filtersJson) : filtersJson;
+
+            // Handle custom locations
+            if (useCustomLocations && locationsFilter) {
+                locations = [];
+                const combinedFilters = new Set();
+
+                // Prioritize activeLocationFilter
+                if (activeLocationFilter) {
+                    activeLocationFilter.split(',').map(filter => filter.trim().toLowerCase()).forEach(filter => combinedFilters.add(filter));
+                } else {
+                    // Fallback to locationSets if activeLocationFilter is not provided
+                    locationSets.forEach(set => combinedFilters.add(set));
+                }
+
+                Object.keys(locationsFilter).forEach(locationSetKey => {
+                    if (combinedFilters.has(locationSetKey)) {
+                        locations = locations.concat(locationsFilter[locationSetKey]);
+                    }
+                });
             }
         } catch (e) {
-            console.error('Invalid filters JSON:', filtersJson);
+            console.error('Invalid filters JSON or Locations Filter:', filtersJson, locationsFilter);
         }
 
-        console.log("Filters:", filters);
-
         // Clear existing markers
-        markers.forEach(function (marker) {
-            marker.setMap(null);
-        });
+        markers.forEach(marker => marker.setMap(null));
         markers = [];
         bounds = new google.maps.LatLngBounds();
         pinnedLocationsCount = 0;
 
-        var service = new google.maps.places.PlacesService(map);
-        var request = {
-            query: location_query,
-            type: type,
-            keyword: keyword,
-            fields: fields,
-            pageToken: nextPageToken || page_token,
-            bounds: new google.maps.LatLngBounds(
-                { lat: 24.396308, lng: -125.000000 },
-                { lat: 49.384358, lng: -66.934570 }
-            )
-        };
+        if (useCustomLocations && locations.length > 0) {
+            // Apply the existing filter to the current set of locations
+            if (filter) {
+                const activeFilters = filter.split(",").map(f => f.replace(/\s/g, "_").trim().toLowerCase());
+                locations = locations.filter(location => {
+                    const locationId = Object.keys(location)[0];
+                    const normalizedAddress = location[locationId]?.toLowerCase() || '';
 
-        service.textSearch(request, function (results, status, pagination) {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                console.log("Locations found:", results);
-
-                // Process filter if not null
-                let activeFilters = [];
-                if (filter) {
-                    activeFilters = filter.split(",").map(f => f.trim().replace(/\s/g, "_").toLowerCase());
-                }
-
-                console.log("Active Filters:", activeFilters);
-
-                // Filter results based on active filters
-                if (activeFilters.length > 0) {
-                    results = results.filter(function (result) {
-                        const normalizedResultAddress = result.formatted_address?.toLowerCase() || "";
-                        return activeFilters.some(function (filterKey) {
-                            if (filters[filterKey]) {
-                                return filters[filterKey].some(function (filterAddress) {
-                                    return normalizedResultAddress.includes(filterAddress.toLowerCase());
-                                });
-                            }
-                            return false;
-                        });
+                    return activeFilters.some(filterKey => {
+                        return filters[filterKey]?.some(filterAddress =>
+                            normalizedAddress.includes(filterAddress.toLowerCase())
+                        );
                     });
-                }
-
-                console.log("Filtered Locations:", results);
-
-                results.forEach(function (place) {
-                    if (place.geometry && place.geometry.location) {
-                        var marker = new google.maps.Marker({
-                            map: map,
-                            position: place.geometry.location,
-                            title: place.name
-                        });
-
-                        // Fetch full place details
-                        service.getDetails({ placeId: place.place_id, fields: ["name", "formatted_address", "formatted_phone_number", "website", "photos", "rating"] }, function (details, status) {
-                            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                                marker.addListener("click", function () {
-                                    var content = generateInfoWindowContent(details);
-                                    if (isMobile()) {
-                                        openDrawer(content);
-                                    } else {
-                                        openPopup(content, marker);
-                                    }
-                                });
-                            }
-                        });
-
-                        markers.push(marker);
-                        bounds.extend(place.geometry.location);
-                        pinnedLocationsCount++;
-                    }
                 });
+            }
 
-                if (results.length === 1) {
-                    // If only one location, set zoom to a closer view
-                    map.setCenter(results[0].geometry.location);
-                    map.setZoom(12); // Adjust zoom level for a closer view
-                } else if (results.length > 1 && 4 > results.length) {
-                    map.fitBounds(bounds);
+            console.log("Filtered Locations to display:", locations);
 
-                    // Zoom out slightly for better visibility of multiple results
-                    const listener = google.maps.event.addListenerOnce(map, 'bounds_changed', function () {
-                        map.setZoom(map.getZoom() - 1); // Zoom out by 1 level
+            // Use location IDs to display markers
+            locations.forEach(location => {
+                Object.keys(location).forEach(locationId => {
+                    const request = {
+                        placeId: locationId,
+                        fields: fields // Ensure fields are passed correctly
+                    };
+
+                    service.getDetails(request, function (place, status) {
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            const marker = new google.maps.Marker({
+                                map: map,
+                                position: place.geometry.location,
+                                title: place.name,
+                            });
+
+                            markers.push(marker);
+                            bounds.extend(place.geometry.location); // Extend bounds to include this marker
+                            pinnedLocationsCount++;
+
+                            // Add InfoWindow content
+                            marker.addListener("click", function () {
+                                const content = generateInfoWindowContent(place);
+                                if (isMobile()) {
+                                    openDrawer(content);
+                                } else {
+                                    openPopup(content, marker);
+                                }
+                            });
+                        } else {
+                            console.error(`Failed to fetch details for placeId: ${locationId}, status: ${status}`);
+                        }
+                    });
+                });
+            });
+
+            // Adjust the map to fit all markers
+            setTimeout(() => {
+                if (!bounds.isEmpty()) {
+                    map.fitBounds(bounds); // Fit the map to the bounds of all markers
+                    google.maps.event.addListenerOnce(map, 'idle', function () {
+                        const currentZoom = map.getZoom();
+                        if (currentZoom > 12) {
+                            map.setZoom(12); // Limit the maximum zoom level
+                        }
                     });
                 } else {
-                    map.fitBounds(bounds);
+                    console.warn("Bounds are empty. No markers to fit.");
                 }
+            }, 1000); // Delay to ensure all markers are processed
 
-                updateInfo(pinnedLocationsCount);
+            updateInfo(pinnedLocationsCount);
+            return;
+        }
 
-                if (pagination && pagination.hasNextPage) {
-                    setTimeout(() => pagination.nextPage(), 2000);
+        // Default behavior: Use location query
+        if (!useCustomLocations) {
+            const request = {
+                query: location_query,
+                type: type,
+                keyword: keyword,
+                fields: fields,
+                pageToken: nextPageToken || page_token,
+                bounds: new google.maps.LatLngBounds(
+                    { lat: 24.396308, lng: -125.000000 },
+                    { lat: 49.384358, lng: -66.934570 }
+                ),
+            };
+
+            console.log("filters data", filters);
+
+            service.textSearch(request, function (results, status, pagination) {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    // Process filter if not null
+                    let activeFilters = [];
+                    if (filter) {
+                        activeFilters = filter.split(",").map(f => f.trim().replace(/\s/g, "_").toLowerCase());
+                    }
+
+                    console.log("Active Filters:", activeFilters);
+
+                    // Filter results based on active filters
+                    if (activeFilters.length > 0) {
+                        results = results.filter(function (result) {
+                            const normalizedResultAddress = result.formatted_address?.toLowerCase() || "";
+                            return activeFilters.some(function (filterKey) {
+                                if (filters[filterKey]) {
+                                    return filters[filterKey].some(function (filterAddress) {
+                                        return normalizedResultAddress.includes(filterAddress.toLowerCase());
+                                    });
+                                }
+                                return false;
+                            });
+                        });
+                    }
+
+                    console.log("Filtered Locations:", results);
+
+                    results.forEach(function (place) {
+                        if (place.geometry && place.geometry.location) {
+                            const marker = new google.maps.Marker({
+                                map: map,
+                                position: place.geometry.location,
+                                title: place.name,
+                            });
+
+                            markers.push(marker);
+                            bounds.extend(place.geometry.location);
+                            pinnedLocationsCount++;
+
+                            // Add InfoWindow content
+                            marker.addListener("click", function () {
+                                const content = generateInfoWindowContent(place);
+                                if (isMobile()) {
+                                    openDrawer(content);
+                                } else {
+                                    openPopup(content, marker);
+                                }
+                            });
+                        }
+                    });
+
+                    if (results.length === 1) {
+                        map.setCenter(results[0].geometry.location);
+                        map.setZoom(12);
+                    } else {
+                        map.fitBounds(bounds);
+                        google.maps.event.addListenerOnce(map, 'bounds_changed', function () {
+                            map.setZoom(map.getZoom() - 1);
+                        });
+                    }
+
+                    updateInfo(pinnedLocationsCount);
+
+                    if (pagination && pagination.hasNextPage) {
+                        setTimeout(() => pagination.nextPage(), 2000);
+                    }
+                } else {
+                    console.error("No locations found: " + status);
+                    updateInfo(0, true);
                 }
-            } else {
-                console.error("No locations found: " + status);
-                updateInfo(0, true);
-            }
-        });
+            });
+        }
     }
 
     function generateStars(rating) {
@@ -445,28 +527,37 @@ amfm.initMap = function (settings) {
 
                 // Gather all active filters
                 let activeFilters = [];
+                let activeLocationFilters = [];
+
                 mapContainer.find("." + filter_class + ".active").each(function () {
                     let query = jQuery(this).data("query") || ""; // Ensure query is not undefined
                     let filter = jQuery(this).data("filter") || ""; // Ensure filter is not undefined
+                    let location = jQuery(this).data("location") || ""; // Get the active location filter
+
                     if (query || filter) {
                         activeFilters.push({ query, filter });
+                    }
+
+                    if (location) {
+                        activeLocationFilters.push(location); // Collect all active location filters
                     }
                 });
 
                 // Combine all active filters into a single query and filter
                 let combinedQuery = activeFilters.map(f => f.query).filter(q => q).join(" OR "); // Combine non-empty queries with "OR"
                 let combinedFilter = activeFilters.map(f => f.filter).filter(f => f).join(","); // Combine non-empty filters with a comma
+                let combinedLocationFilter = activeLocationFilters.join(","); // Combine all active location filters
 
-                // Call searchLocations with combined filters
-                if (combinedQuery) {
-                    mapInstance.searchLocations(combinedQuery, combinedFilter || null);
+                // Call searchLocations with combined filters and active location filter
+                if (combinedQuery || combinedLocationFilter) {
+                    mapInstance.searchLocations(combinedQuery, combinedFilter || null, null, combinedLocationFilter);
                 } else {
                     mapInstance.searchLocations(location_query, combinedFilter || null); // Default to the original query if no active filters
                 }
 
-                console.log("Active Filters:", activeFilters);
                 console.log("Combined Query:", combinedQuery);
                 console.log("Combined Filter:", combinedFilter);
+                console.log("Combined Location Filter:", combinedLocationFilter);
             } else {
                 console.error("Map instance not found for ID:", mapId);
             }
