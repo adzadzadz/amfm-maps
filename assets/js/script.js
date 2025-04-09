@@ -189,8 +189,9 @@ amfm.initMap = function (settings) {
                     map.fitBounds(bounds); // Fit the map to the bounds of all markers
                     google.maps.event.addListenerOnce(map, 'idle', function () {
                         const currentZoom = map.getZoom();
-                        if (currentZoom > 12) {
-                            map.setZoom(12); // Limit the maximum zoom level
+                        
+                        if (currentZoom > 9) {
+                            map.setZoom(9); // Limit the maximum zoom level
                         }
                     });
                 } else {
@@ -332,9 +333,8 @@ amfm.initMap = function (settings) {
                     <!-- Name -->
                     <div style="font-size: 18px; font-weight: bold; margin-top: 10px;">${place.name}</div>
                     <!-- Rating -->
-                    ${place.rating ? `
-                    <div style="font-size: 14px; color: #ffc107; margin-top: 5px;">
-                        ${generateStars(place.rating)}
+                    ${place.rating ? `<div style="font-size: 14px; color: #ffc107; margin-top: 5px;">
+                        <span style="color: #010101;">${place.rating.toFixed(1)}</span> ${generateStars(place.rating)}
                     </div>` : ""}
                     <!-- Address -->
                     <div style="font-size: 14px; color: #555; margin-top: 5px;">${place.formatted_address || "Address not available"}</div>
