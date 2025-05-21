@@ -333,7 +333,7 @@ amfm.initMap = function (settings) {
             params.delete('utm_source');
             params.delete('utm_medium');
             params.delete('utm_campaign');
-            place.website = url.origin + url.pathname + '?' + params.toString();
+            place.website = url.origin + url.pathname;
         }
 
         var content = `
