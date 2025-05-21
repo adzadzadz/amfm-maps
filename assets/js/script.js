@@ -326,6 +326,16 @@ amfm.initMap = function (settings) {
             photoSlider += '</div>';
         }
 
+        // place.website contains utm parameters, we need to remove them. Sample url https://amfmtreatment.com/california/male-rtc-in-dana-point/?utm_source=google&utm_medium=organic&utm_campaign=gbp-crystal-lantern
+        if (place.website) {
+            const url = new URL(place.website);
+            const params = new URLSearchParams(url.search);
+            params.delete('utm_source');
+            params.delete('utm_medium');
+            params.delete('utm_campaign');
+            place.website = url.origin + url.pathname + '?' + params.toString();
+        }
+
         var content = `
             <div style="line-height: 1.6;">
                 ${photoSlider}
@@ -338,11 +348,6 @@ amfm.initMap = function (settings) {
                     </div>` : ""}
                     <!-- Address -->
                     <div style="font-size: 14px; color: #555; margin-top: 5px;">${place.formatted_address || "Address not available"}</div>
-                    <!-- Phone Number -->
-                    ${place.formatted_phone_number ? `
-                    <div class="phone-number-wrapper" style="font-size: 16px; color: #007BFF; margin-top: 5px;">
-                        <i class="fas fa-phone-alt"></i> <a href="tel:${place.international_phone_number}" style="text-decoration: none; color: #007BFF;">${place.formatted_phone_number}</a>
-                    </div>` : ""}
                     <!-- Website -->
                     ${place.website ? `
                     <div class="website-link-wrapper"">
