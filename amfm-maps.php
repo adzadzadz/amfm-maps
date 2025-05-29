@@ -3,7 +3,7 @@
 /**
  * Plugin Name: AMFM Maps
  * Description: A custom Elementor module to display various maps and elements.
- * Version: 1.7.5
+ * Version: 1.7.6
  * Author:            Adrian T. Saycon
  * Author URI:        https://adzbyte.com/
  * License:           GPL-2.0+
@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define version
-define('AMFM_MAPS_VERSION', '1.7.5');
+define('AMFM_MAPS_VERSION', '1.7.6');
 define('AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc');
 
 // Check if Elementor is installed and active
@@ -65,7 +65,16 @@ function amfm_maps_init()
 
     // Hook to enqueue assets
     add_action('wp_enqueue_scripts', function () {
-        if (is_page(['california', 'virginia', 'washington'])) {
+        if (is_page([
+                'california', 
+                'virginia', 
+                'washington', 
+                'amfm-lp-2',
+                'amfm-lp-va',
+                'amfm-lp-ca',
+                'amfm-lp-2-california',
+                'amfm-lp-2-virginia'
+            ])) {
             // Enqueue imagesLoaded library
             wp_enqueue_script('imagesloaded', 'https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js', ['jquery'], '4.1.4', true);
 
