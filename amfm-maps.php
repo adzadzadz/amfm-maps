@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define version
-define('AMFM_MAPS_VERSION', '1.7.6');
+define('AMFM_MAPS_VERSION', '2.0.2');
 define('AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc');
 
 // Check if Elementor is installed and active
@@ -50,6 +50,7 @@ function amfm_maps_init()
 
     // Include the necessary files
     require_once __DIR__ . '/includes/elementor/class-map-widget.php';
+    require_once __DIR__ . '/admin/class-amfm-maps-admin.php';
 
     // Register the widget
     function register_amfm_map_widget()
@@ -60,8 +61,13 @@ function amfm_maps_init()
     // Hook to register the widgets
     add_action('elementor/widgets/widgets_registered', 'register_amfm_map_widget');
 
-
-
+    // Initialize admin functionality
+    if (is_admin()) {
+        $amfm_maps_admin = new Amfm_Maps_Admin('amfm-maps', AMFM_MAPS_VERSION);
+        add_action('admin_menu', array($amfm_maps_admin, 'add_admin_menu'));
+        add_action('admin_enqueue_scripts', array($amfm_maps_admin, 'enqueue_styles'));
+        add_action('admin_enqueue_scripts', array($amfm_maps_admin, 'enqueue_scripts'));
+    }
 
     // Hook to enqueue assets
     add_action('wp_enqueue_scripts', function () {
@@ -91,6 +97,24 @@ function amfm_maps_init()
             wp_enqueue_script('amfm-maps-script', plugins_url('assets/js/script.js', __FILE__), ['jquery', 'owl-carousel-js', 'imagesloaded', 'amfm-google-maps'], AMFM_MAPS_VERSION, true);
         }
     });
+}
+
+// Add custom cron intervals
+add_filter('cron_schedules', 'amfm_maps_cron_schedules');
+function amfm_maps_cron_schedules($schedules) {
+    if (!isset($schedules['weekly'])) {
+        $schedules['weekly'] = array(
+            'interval' => 604800, // 1 week in seconds
+            'display' => __('Once Weekly', 'amfm-maps')
+        );
+    }
+    if (!isset($schedules['monthly'])) {
+        $schedules['monthly'] = array(
+            'interval' => 2635200, // 30.5 days in seconds
+            'display' => __('Once Monthly', 'amfm-maps')
+        );
+    }
+    return $schedules;
 }
 
 // Hook to initialize the plugin
