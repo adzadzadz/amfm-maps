@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define version
-define('AMFM_MAPS_VERSION', '2.0.2');
+define('AMFM_MAPS_VERSION', '2.0.6');
 define('AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc');
 
 // Check if Elementor is installed and active

@@ -43,6 +43,10 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
     }
 }
 
+/**
+ * Simple function to copy JSON to clipboard (added via JavaScript)
+ */
+
 ?>
 
 <div class="wrap amfm-maps-wrap">
@@ -249,8 +253,10 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
                         <li><?php _e('Weekly or monthly sync for static data', 'amfm-maps'); ?></li>
                     </ul>
                 </div>
-                </div>
             </div>
+            
+            </div>
+        </div>
         </div>
         
         <!-- Data View Tab -->
@@ -263,6 +269,83 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
                     $last_sync = get_option('amfm_maps_last_sync', '');
                     $sync_status = get_option('amfm_maps_sync_status', '');
                     ?>
+                    
+                    <!-- Debug Information Panel -->
+                    <div class="amfm-maps-panel">
+                        <div class="amfm-maps-panel-header">
+                            <h3 class="amfm-maps-panel-title">
+                                <i class="dashicons dashicons-admin-tools"></i>
+                                <?php _e('Debug Information', 'amfm-maps'); ?>
+                            </h3>
+                            <p class="amfm-maps-panel-description"><?php _e('Technical details about the stored JSON data', 'amfm-maps'); ?></p>
+                        </div>
+                        <div class="amfm-maps-panel-body">
+                            <?php
+                            // Check if JSON data exists
+                            $debug_json_data = get_option('amfm_maps_json_data', null);
+                            $has_data = !empty($debug_json_data);
+                            $data_type = gettype($debug_json_data);
+                            $data_size = 0;
+                            $data_count = 0;
+                            
+                            if ($has_data) {
+                                if (is_array($debug_json_data) || is_object($debug_json_data)) {
+                                    $data_count = is_array($debug_json_data) ? count($debug_json_data) : count((array)$debug_json_data);
+                                }
+                                $data_size = strlen(serialize($debug_json_data));
+                            }
+                            ?>
+                            
+                            <div class="amfm-maps-debug-item">
+                                <strong><?php _e('JSON Data Status:', 'amfm-maps'); ?></strong>
+                                <span class="amfm-maps-status amfm-maps-status-<?php echo $has_data ? 'success' : 'error'; ?>">
+                                    <?php echo $has_data ? __('Present', 'amfm-maps') : __('Not Found', 'amfm-maps'); ?>
+                                </span>
+                            </div>
+                            
+                            <div class="amfm-maps-debug-item">
+                                <strong><?php _e('Data Type:', 'amfm-maps'); ?></strong>
+                                <code><?php echo esc_html($data_type); ?></code>
+                            </div>
+                            
+                            <?php if ($has_data): ?>
+                                <div class="amfm-maps-debug-item">
+                                    <strong><?php _e('Element Count:', 'amfm-maps'); ?></strong>
+                                    <code><?php echo esc_html($data_count); ?></code>
+                                </div>
+                                
+                                <div class="amfm-maps-debug-item">
+                                    <strong><?php _e('Serialized Size:', 'amfm-maps'); ?></strong>
+                                    <code><?php echo esc_html(number_format($data_size)); ?> bytes</code>
+                                </div>
+                                
+                                <div class="amfm-maps-debug-item">
+                                    <strong><?php _e('Option Key:', 'amfm-maps'); ?></strong>
+                                    <code>amfm_maps_json_data</code>
+                                </div>
+                            <?php else: ?>
+                                <div class="amfm-maps-debug-item">
+                                    <span class="amfm-maps-warning">
+                                        <?php _e('No JSON data found. Try syncing data first.', 'amfm-maps'); ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <!-- Raw debug output for troubleshooting -->
+                            <details class="amfm-maps-debug-details">
+                                <summary><?php _e('Raw Debug Output', 'amfm-maps'); ?></summary>
+                                <pre class="amfm-maps-debug-raw"><?php 
+                                    echo "Option exists: " . (get_option('amfm_maps_json_data', false) !== false ? 'YES' : 'NO') . "\n";
+                                    echo "Is empty: " . (empty($debug_json_data) ? 'YES' : 'NO') . "\n";
+                                    echo "Is null: " . (is_null($debug_json_data) ? 'YES' : 'NO') . "\n";
+                                    echo "Type: " . $data_type . "\n";
+                                    if ($has_data && $data_count > 0) {
+                                        echo "Sample: " . esc_html(substr(json_encode($debug_json_data), 0, 100)) . "...\n";
+                                    }
+                                ?></pre>
+                            </details>
+                        </div>
+                    </div>
                     
                     <!-- Data Overview Panel -->
                     <div class="amfm-maps-panel">
@@ -284,72 +367,24 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
                         </div>
                         
                         <div class="amfm-maps-panel-body">
-                            <?php if (!empty($json_data) && is_array($json_data)): ?>
+                            <?php if (!empty($json_data)): ?>
                                 <!-- Data Statistics -->
                                 <div class="amfm-maps-data-stats">
                                     <div class="amfm-maps-stat-item">
-                                        <div class="amfm-maps-stat-number"><?php echo count($json_data, COUNT_RECURSIVE); ?></div>
-                                        <div class="amfm-maps-stat-label"><?php _e('Total Elements', 'amfm-maps'); ?></div>
-                                    </div>
-                                    <div class="amfm-maps-stat-item">
-                                        <div class="amfm-maps-stat-number"><?php echo count($json_data); ?></div>
-                                        <div class="amfm-maps-stat-label"><?php _e('Root Elements', 'amfm-maps'); ?></div>
+                                        <div class="amfm-maps-stat-number"><?php echo is_array($json_data) ? count($json_data) : 1; ?></div>
+                                        <div class="amfm-maps-stat-label"><?php _e('Items', 'amfm-maps'); ?></div>
                                     </div>
                                     <div class="amfm-maps-stat-item">
                                         <div class="amfm-maps-stat-number"><?php echo strlen(json_encode($json_data)); ?></div>
                                         <div class="amfm-maps-stat-label"><?php _e('Data Size (bytes)', 'amfm-maps'); ?></div>
                                     </div>
                                     <div class="amfm-maps-stat-item">
-                                        <div class="amfm-maps-stat-number"><?php echo get_json_data_depth($json_data); ?></div>
-                                        <div class="amfm-maps-stat-label"><?php _e('Max Depth', 'amfm-maps'); ?></div>
+                                        <div class="amfm-maps-stat-number"><?php echo gettype($json_data); ?></div>
+                                        <div class="amfm-maps-stat-label"><?php _e('Data Type', 'amfm-maps'); ?></div>
                                     </div>
-                                </div>
-                                
-                                <!-- Data Structure Analysis -->
-                                <div class="amfm-maps-data-analysis">
-                                    <h3><?php _e('Data Structure', 'amfm-maps'); ?></h3>
-                                    <div class="amfm-maps-structure-tree">
-                                        <?php echo generate_json_structure_tree($json_data); ?>
-                                    </div>
-                                </div>
-                                
-                                <!-- Interactive Data Table -->
-                                <div class="amfm-maps-data-table-container">
-                                    <div class="amfm-maps-table-controls">
-                                        <div class="amfm-maps-search-box">
-                                            <input type="text" id="data-search" placeholder="<?php _e('Search data...', 'amfm-maps'); ?>" class="amfm-maps-input">
-                                            <i class="dashicons dashicons-search"></i>
-                                        </div>
-                                        <div class="amfm-maps-table-actions">
-                                            <button class="amfm-maps-button amfm-maps-button-secondary" id="expand-all">
-                                                <i class="dashicons dashicons-plus-alt"></i>
-                                                <?php _e('Expand All', 'amfm-maps'); ?>
-                                            </button>
-                                            <button class="amfm-maps-button amfm-maps-button-secondary" id="collapse-all">
-                                                <i class="dashicons dashicons-minus"></i>
-                                                <?php _e('Collapse All', 'amfm-maps'); ?>
-                                            </button>
-                                            <button class="amfm-maps-button amfm-maps-button-secondary" id="export-json">
-                                                <i class="dashicons dashicons-download"></i>
-                                                <?php _e('Export JSON', 'amfm-maps'); ?>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="amfm-maps-data-table-wrapper">
-                                        <table class="amfm-maps-data-table" id="json-data-table">
-                                            <thead>
-                                                <tr>
-                                                    <th><?php _e('Key/Index', 'amfm-maps'); ?></th>
-                                                    <th><?php _e('Type', 'amfm-maps'); ?></th>
-                                                    <th><?php _e('Value', 'amfm-maps'); ?></th>
-                                                    <th><?php _e('Actions', 'amfm-maps'); ?></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php echo generate_json_table_rows($json_data); ?>
-                                            </tbody>
-                                        </table>
+                                    <div class="amfm-maps-stat-item">
+                                        <div class="amfm-maps-stat-number"><?php echo $last_sync ? human_time_diff(strtotime($last_sync), current_time('timestamp')) . ' ago' : 'Never'; ?></div>
+                                        <div class="amfm-maps-stat-label"><?php _e('Last Updated', 'amfm-maps'); ?></div>
                                     </div>
                                 </div>
                                 
@@ -387,119 +422,6 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
     </div>
 </div>
 
-<?php
-/**
- * Helper function to calculate JSON data depth
- */
-function get_json_data_depth($data, $depth = 0) {
-    if (!is_array($data)) {
-        return $depth;
-    }
-    
-    $max_depth = $depth;
-    foreach ($data as $item) {
-        if (is_array($item)) {
-            $current_depth = get_json_data_depth($item, $depth + 1);
-            $max_depth = max($max_depth, $current_depth);
-        }
-    }
-    return $max_depth;
-}
-
-/**
- * Generate structure tree HTML
- */
-function generate_json_structure_tree($data, $key = 'root', $level = 0) {
-    $indent = str_repeat('  ', $level);
-    $html = '';
-    
-    if (is_array($data)) {
-        $type = array_keys($data) === range(0, count($data) - 1) ? 'array' : 'object';
-        $count = count($data);
-        
-        $html .= "<div class='structure-item level-{$level}'>";
-        $html .= "<span class='structure-key'>{$key}</span>";
-        $html .= "<span class='structure-type type-{$type}'>{$type}</span>";
-        $html .= "<span class='structure-count'>({$count} items)</span>";
-        
-        if ($count <= 10) { // Only show children for smaller objects/arrays
-            $html .= "<div class='structure-children'>";
-            foreach ($data as $childKey => $childValue) {
-                $html .= generate_json_structure_tree($childValue, $childKey, $level + 1);
-            }
-            $html .= "</div>";
-        }
-        $html .= "</div>";
-    } else {
-        $type = gettype($data);
-        $html .= "<div class='structure-item level-{$level}'>";
-        $html .= "<span class='structure-key'>{$key}</span>";
-        $html .= "<span class='structure-type type-{$type}'>{$type}</span>";
-        $html .= "</div>";
-    }
-    
-    return $html;
-}
-
-/**
- * Generate table rows for JSON data
- */
-function generate_json_table_rows($data, $parent_key = '', $level = 0) {
-    $html = '';
-    
-    if (!is_array($data)) {
-        return $html;
-    }
-    
-    foreach ($data as $key => $value) {
-        $full_key = $parent_key ? $parent_key . '.' . $key : $key;
-        $type = gettype($value);
-        $display_value = '';
-        $has_children = false;
-        
-        if (is_array($value)) {
-            $has_children = true;
-            $count = count($value);
-            $display_value = $type === 'array' ? "[Array with {$count} items]" : "{Object with {$count} properties}";
-        } elseif (is_string($value)) {
-            $display_value = strlen($value) > 100 ? substr($value, 0, 100) . '...' : $value;
-        } elseif (is_bool($value)) {
-            $display_value = $value ? 'true' : 'false';
-        } elseif (is_null($value)) {
-            $display_value = 'null';
-        } else {
-            $display_value = $value;
-        }
-        
-        $row_class = $has_children ? 'has-children' : '';
-        $row_class .= $level > 0 ? ' child-row level-' . $level : '';
-        
-        $html .= "<tr class='data-row {$row_class}' data-key='{$full_key}' data-level='{$level}'>";
-        $html .= "<td class='key-cell'>";
-        $html .= str_repeat('<span class="indent"></span>', $level);
-        if ($has_children) {
-            $html .= "<span class='toggle-children' data-key='{$full_key}'><i class='dashicons dashicons-arrow-right'></i></span>";
-        }
-        $html .= "<span class='key-name'>{$key}</span>";
-        $html .= "</td>";
-        $html .= "<td class='type-cell'><span class='type-badge type-{$type}'>{$type}</span></td>";
-        $html .= "<td class='value-cell'><span class='value-content'>" . esc_html($display_value) . "</span></td>";
-        $html .= "<td class='actions-cell'>";
-        if (!$has_children && is_string($value) && strlen($value) > 100) {
-            $html .= "<button class='amfm-maps-button-small' onclick='showFullValue(\"{$full_key}\")'>View Full</button>";
-        }
-        if ($has_children) {
-            $html .= "<button class='amfm-maps-button-small' onclick='exportSubset(\"{$full_key}\")'>Export</button>";
-        }
-        $html .= "</td>";
-        $html .= "</tr>";
-        
-        // Add children rows (initially hidden)
-        if ($has_children) {
-            $html .= generate_json_table_rows($value, $full_key, $level + 1);
-        }
-    }
-    
-    return $html;
-}
-?>
+        </div>
+    </div>
+</div>

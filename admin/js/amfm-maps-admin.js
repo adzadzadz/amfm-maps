@@ -9,6 +9,12 @@
 	$(document).ready(function() {
 		console.log('AMFM Maps admin script loaded');
 		
+		// Hide WordPress footer on this admin page
+		$('#wpfooter').hide();
+		
+		// Add body class for better CSS targeting
+		$('body').addClass('amfm-maps-admin-page');
+		
 		// Initialize admin functionality
 		initializeFormValidation();
 		initializeSyncFunctionality();
@@ -168,10 +174,19 @@
 	 */
 	function initializeTabs() {
 		// Tab switching
-		$('.amfm-maps-tab-button').on('click', function() {
+		$('.amfm-maps-tab-button').on('click', function(e) {
+			e.preventDefault();
 			const tabId = $(this).data('tab');
 			switchTab(tabId);
 		});
+		
+		// Ensure only the first tab is active on load
+		if ($('.amfm-maps-tab-button.active').length === 0) {
+			$('.amfm-maps-tab-button').first().addClass('active');
+		}
+		if ($('.amfm-maps-tab-pane.active').length === 0) {
+			$('.amfm-maps-tab-pane').first().addClass('active');
+		}
 	}
 
 	/**
@@ -386,41 +401,59 @@
 	/**
 	 * Copy to clipboard functionality
 	 */
-	window.copyToClipboard = function(elementId, isModal = false) {
-		const element = isModal ? $('.amfm-modal-content') : $('#' + elementId);
-		const text = element.text();
-		
-		if (navigator.clipboard) {
-			navigator.clipboard.writeText(text).then(function() {
-				showNotification('Copied to clipboard!', 'success');
-			}).catch(function() {
-				fallbackCopyToClipboard(text);
-			});
-		} else {
-			fallbackCopyToClipboard(text);
+	function copyToClipboard(elementId) {
+		const element = document.getElementById(elementId);
+		if (!element) {
+			showNotification('Element not found for copying', 'error');
+			return;
 		}
-	};
-
-	/**
-	 * Fallback copy to clipboard for older browsers
-	 */
-	function fallbackCopyToClipboard(text) {
+		
+		// Create a text area element to copy from
 		const textArea = document.createElement('textarea');
-		textArea.value = text;
-		textArea.style.position = 'fixed';
-		textArea.style.opacity = '0';
+		textArea.value = element.textContent || element.innerText;
 		document.body.appendChild(textArea);
-		textArea.focus();
+		
+		// Select and copy the text
 		textArea.select();
+		textArea.setSelectionRange(0, 99999); // For mobile devices
 		
 		try {
-			document.execCommand('copy');
-			showNotification('Copied to clipboard!', 'success');
+			const successful = document.execCommand('copy');
+			if (successful) {
+				showNotification('JSON data copied to clipboard!', 'success');
+			} else {
+				showNotification('Failed to copy to clipboard', 'error');
+			}
 		} catch (err) {
-			showNotification('Copy failed. Please copy manually.', 'error');
+			showNotification('Failed to copy to clipboard', 'error');
+			console.error('Copy failed:', err);
 		}
 		
+		// Remove the temporary text area
 		document.body.removeChild(textArea);
+	}
+	
+	/**
+	 * Show notification
+	 */
+	function showNotification(message, type = 'info') {
+		// Remove any existing notifications
+		$('.amfm-maps-notification').remove();
+		
+		const notification = $('<div class="amfm-maps-notification">')
+			.addClass('notification-' + type)
+			.text(message);
+		
+		$('body').append(notification);
+		
+		// Show notification
+		setTimeout(() => notification.addClass('show'), 100);
+		
+		// Hide notification after 3 seconds
+		setTimeout(() => {
+			notification.removeClass('show');
+			setTimeout(() => notification.remove(), 300);
+		}, 3000);
 	}
 
 	/**
@@ -511,4 +544,8 @@
 		
 		$('head').append(spinCSS);
 	});
+	
+	// Make functions globally available
+	window.switchTab = switchTab;
+	window.copyToClipboard = copyToClipboard;
 })( jQuery );

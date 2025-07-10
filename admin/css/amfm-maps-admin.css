@@ -14,6 +14,10 @@
     color: #495157;
     line-height: 1.5;
     margin: 0;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 100px; /* Add space for footer */
 }
 
 /* Header */
@@ -374,22 +378,22 @@
 }
 
 .amfm-maps-tab-button.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #007cba;
     color: white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .amfm-maps-tab-content {
-    min-height: 500px;
+    position: relative;
+    z-index: 1;
+    min-height: 600px; /* Minimum height to prevent footer overlap */
+    padding-bottom: 60px; /* Extra padding at bottom */
 }
 
 .amfm-maps-tab-pane {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.amfm-maps-tab-pane.active {
-    display: block;
+    position: relative;
+    clear: both;
+    overflow: hidden; /* Clearfix */
+    min-height: 500px;
 }
 
 @keyframes fadeIn {
@@ -853,6 +857,134 @@
     animation: spin 1s linear infinite;
 }
 
+/* Debug Section Styles */
+.amfm-maps-debug-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.amfm-maps-debug-item:last-child {
+    border-bottom: none;
+}
+
+.amfm-maps-debug-item strong {
+    color: #495157;
+    font-weight: 600;
+    margin-right: 12px;
+}
+
+.amfm-maps-debug-item code {
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Monaco, "Consolas", "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    color: #e83e8c;
+    border: 1px solid #e9ecef;
+}
+
+.amfm-maps-debug-details {
+    margin-top: 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.amfm-maps-debug-details summary {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    cursor: pointer;
+    font-weight: 600;
+    color: #495157;
+    user-select: none;
+}
+
+.amfm-maps-debug-details summary:hover {
+    background: #e9ecef;
+}
+
+.amfm-maps-debug-raw {
+    margin: 0;
+    padding: 16px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "SFMono-Regular", Monaco, "Consolas", "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.amfm-maps-debug-raw::-webkit-scrollbar {
+    height: 8px;
+}
+
+.amfm-maps-debug-raw::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.amfm-maps-debug-raw::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+}
+
+.amfm-maps-debug-raw::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+.amfm-maps-warning {
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: inline-block;
+}
+
+/* Notification System */
+.amfm-maps-notification {
+    position: fixed;
+    top: 32px;
+    right: 20px;
+    background: #fff;
+    border-left: 4px solid #007cba;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 300px;
+}
+
+.amfm-maps-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.amfm-maps-notification.notification-success {
+    border-left-color: #00a32a;
+    color: #00a32a;
+}
+
+.amfm-maps-notification.notification-error {
+    border-left-color: #d63638;
+    color: #d63638;
+}
+
+.amfm-maps-notification.notification-warning {
+    border-left-color: #dba617;
+    color: #dba617;
+}
+
 /* Utility classes */
 .amfm-hidden {
     display: none !important;
@@ -900,4 +1032,103 @@
 .amfm-maps-json-code::-webkit-scrollbar-thumb:hover,
 .amfm-modal-content::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+/* Fix footer overlap and ensure proper content flow */
+.amfm-maps-wrap {
+    min-height: calc(100vh - 160px);
+    position: relative;
+    z-index: 1;
+    margin-bottom: 120px !important; /* Force space for footer */
+    padding-bottom: 80px !important; /* Extra bottom padding */
+}
+
+/* Ensure tab content has proper clearfix and spacing */
+.amfm-maps-tab-content {
+    position: relative;
+    z-index: 1;
+    min-height: 700px; /* Increased minimum height */
+    padding-bottom: 100px !important; /* Force extra padding at bottom */
+    margin-bottom: 60px !important; /* Extra margin */
+}
+
+.amfm-maps-tab-pane {
+    position: relative;
+    clear: both;
+    overflow: visible; /* Changed from hidden to visible */
+    min-height: 600px; /* Increased minimum height */
+    padding-bottom: 80px !important;
+}
+
+/* Ensure the wrap content pushes down any following content */
+.amfm-maps-wrap::after {
+    content: "";
+    display: block; /* Changed from table to block */
+    clear: both;
+    height: 100px; /* Add explicit height */
+}
+
+/* Force proper spacing for WordPress admin content */
+#wpbody-content {
+    padding-bottom: 150px !important; /* Increased padding */
+}
+
+.wrap.amfm-maps-wrap {
+    margin-bottom: 150px !important; /* Force bottom margin on wrap */
+}
+
+/* Fix any floating elements within panels */
+.amfm-maps-panel-body::after,
+.amfm-maps-container::after {
+    content: "";
+    display: block; /* Changed from table to block */
+    clear: both;
+    height: 20px; /* Add small height for spacing */
+}
+
+/* Ensure WordPress footer stays below our content */
+#wpfooter {
+    margin-top: 100px !important;
+    clear: both !important;
+}
+
+/* Additional clearfix for admin page content */
+.wp-admin #wpcontent {
+    padding-bottom: 100px !important;
+}
+
+/* Hide WordPress footer on AMFM Maps admin page */
+.wp-admin.toplevel_page_amfm #wpfooter,
+.wp-admin.amfm_page_amfm-maps #wpfooter,
+body.wp-admin[class*="amfm-maps"] #wpfooter {
+    display: none !important;
+}
+
+/* Ensure proper tab functionality */
+.amfm-maps-tab-pane {
+    display: none;
+}
+
+.amfm-maps-tab-pane.active {
+    display: block;
+}
+
+.amfm-maps-tab-button {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    padding: 10px 20px;
+    margin-right: 5px;
+    border-radius: 5px 5px 0 0;
+}
+
+.amfm-maps-tab-button:hover {
+    background: #e7e7e7;
+}
+
+.amfm-maps-tab-button.active {
+    background: #007cba;
+    color: white;
+    border-color: #007cba;
 }
