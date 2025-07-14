@@ -1,0 +1,121 @@
+name: AMFM Maps Plugin Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mysqli, zip, gd
+        tools: composer, wp-cli
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: wp-content/plugins/amfm-maps/package-lock.json
+
+    - name: Install WordPress
+      run: |
+        # Download WordPress
+        wp core download --path=/tmp/wordpress
+        
+        # Configure WordPress
+        wp config create --path=/tmp/wordpress \
+          --dbname=wordpress_test \
+          --dbuser=root \
+          --dbpass=password \
+          --dbhost=127.0.0.1:3306
+        
+        # Install WordPress
+        wp core install --path=/tmp/wordpress \
+          --url=http://localhost:8080 \
+          --title="AMFM Maps Test Site" \
+          --admin_user=admin \
+          --admin_password=password \
+          --admin_email=test@example.com
+
+    - name: Install Elementor
+      run: |
+        # Download and install Elementor
+        wp plugin install elementor --activate --path=/tmp/wordpress
+
+    - name: Copy AMFM Maps Plugin
+      run: |
+        # Copy the plugin to WordPress installation
+        cp -r wp-content/plugins/amfm-maps /tmp/wordpress/wp-content/plugins/
+        
+        # Activate the plugin
+        wp plugin activate amfm-maps --path=/tmp/wordpress
+
+    - name: Start WordPress Server
+      run: |
+        # Start PHP built-in server
+        cd /tmp/wordpress
+        php -S localhost:8080 &
+        sleep 5
+        
+        # Wait for server to be ready
+        curl -f http://localhost:8080 || exit 1
+
+    - name: Install test dependencies
+      run: |
+        cd wp-content/plugins/amfm-maps
+        npm ci
+
+    - name: Install Playwright Browsers
+      run: |
+        cd wp-content/plugins/amfm-maps
+        npx playwright install --with-deps
+
+    - name: Setup test data
+      run: |
+        # Load test data into WordPress
+        wp option update amfm_maps_json_data "$(cat wp-content/plugins/amfm-maps/tests/fixtures/test-data.json)" --format=json --path=/tmp/wordpress
+
+    - name: Run Playwright tests
+      run: |
+        cd wp-content/plugins/amfm-maps
+        npm test
+      env:
+        PLAYWRIGHT_BASE_URL: http://localhost:8080
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report
+        path: wp-content/plugins/amfm-maps/playwright-report/
+        retention-days: 30
+
+    - name: Upload test screenshots
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: test-screenshots
+        path: wp-content/plugins/amfm-maps/test-results/
+        retention-days: 7
