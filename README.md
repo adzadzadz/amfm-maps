@@ -53,6 +53,7 @@ AMFM Maps is a comprehensive Elementor plugin designed to display mental health 
 - **Flexible Layout**: Place filters and maps in separate sections or columns
 - **Multiple Configurations**: Use multiple filter widgets for different map displays
 - **Real-Time Updates**: Instant communication between filter and map widgets
+- **100% Width Design**: Both widgets are full-width for complete Elementor layout control
 
 ## Filter Categories
 
@@ -155,6 +156,54 @@ AMFM Maps is a comprehensive Elementor plugin designed to display mental health 
 - **Button Spacing**: Padding and margins
 - **Border Styling**: Border radius and effects
 - **Container Styling**: Background and padding options
+
+## Layout Flexibility
+
+### Full-Width Design Benefits
+Both the **AMFM Map V2** and **AMFM Map V2 Filter** widgets are designed with 100% width, giving you complete control over layouts using Elementor's built-in column system.
+
+### Layout Examples
+
+#### Side-by-Side Layout
+```
+[Filter Widget - 30% Column] [Map Widget - 70% Column]
+```
+**Setup:**
+1. Create a 2-column section (30/70 split)
+2. Add Filter Widget to left column
+3. Add Map Widget to right column
+
+#### Stacked Layout
+```
+[Filter Widget - 100% Column]
+[Map Widget - 100% Column]
+```
+**Setup:**
+1. Create single-column sections
+2. Add Filter Widget to top section
+3. Add Map Widget to bottom section
+
+#### Multi-Map Layout
+```
+[Filter Widget - 100% Column]
+[Map Widget 1 - 50% Column] [Map Widget 2 - 50% Column]
+```
+**Setup:**
+1. Add one Filter Widget (controls both maps)
+2. Create 2-column section below
+3. Add Map Widgets to each column
+
+#### Complex Layouts
+```
+[Header Content]
+[Filter Widget - 25%] [Map Widget - 50%] [Sidebar Content - 25%]
+[Footer Content]
+```
+**Benefits:**
+- Complete design freedom
+- Mobile-responsive automatically
+- Works with any Elementor theme
+- Easy to customize spacing and alignment
 
 ## Technical Implementation
 

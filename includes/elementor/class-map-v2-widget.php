@@ -193,7 +193,7 @@ class MapV2Widget extends Widget_Base
         }
         
         ?>
-        <div class="amfm-map-v2-container" 
+        <div class="amfm-map-v2-container amfm-map-only" 
              id="<?php echo esc_attr($unique_id); ?>"
              data-filter-id="<?php echo esc_attr($filter_id); ?>">
             

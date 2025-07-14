@@ -442,7 +442,7 @@ class MapV2FilterWidget extends Widget_Base
         $filter_options = $this->generate_filter_options($json_data);
         
         ?>
-        <div class="amfm-filter-container amfm-layout-<?php echo esc_attr($filter_layout); ?>" 
+        <div class="amfm-filter-container amfm-filter-only amfm-layout-<?php echo esc_attr($filter_layout); ?>" 
              id="<?php echo esc_attr($unique_id); ?>"
              data-target-map="<?php echo esc_attr($target_map_id); ?>">
             
