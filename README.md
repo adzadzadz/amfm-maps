@@ -3,7 +3,7 @@
 ## Overview
 AMFM Maps is a comprehensive Elementor plugin designed to display mental health treatment facility locations with sophisticated mapping and filtering capabilities. This plugin enhances the Elementor page builder by providing advanced map widgets that can be easily integrated into your WordPress designs.
 
-**Current Version**: 2.1.1  
+**Current Version**: 2.2.0  
 **WordPress Version**: 5.0+  
 **Elementor Version**: 3.0+  
 **PHP Version**: 7.4+
@@ -33,6 +33,26 @@ AMFM Maps is a comprehensive Elementor plugin designed to display mental health 
 - **Live Preview**: Real-time styling in Elementor editor
 - **Content Controls**: Toggle filter categories on/off
 - **Layout Options**: Choose between button and sidebar layouts
+
+## Available Widgets
+
+### 🗺️ AMFM Map V2
+- **Purpose**: Displays the interactive map with location markers
+- **Features**: Google Maps integration, marker clustering, location details
+- **Controls**: Map height, title, data source configuration
+- **Filtering**: Can work standalone or with external filter widget
+
+### 🎛️ AMFM Map V2 Filter
+- **Purpose**: Standalone filter controls for map widgets
+- **Features**: Independent filter widget that can control any map on the page
+- **Controls**: Filter layout (buttons/sidebar), category toggles, styling options
+- **Flexibility**: Can target specific map widgets or control all maps globally
+
+### 🔗 Widget Communication
+- **Cross-Widget Filtering**: Filter widgets can control map widgets anywhere on the page
+- **Flexible Layout**: Place filters and maps in separate sections or columns
+- **Multiple Configurations**: Use multiple filter widgets for different map displays
+- **Real-Time Updates**: Instant communication between filter and map widgets
 
 ## Filter Categories
 
@@ -79,51 +99,84 @@ AMFM Maps is a comprehensive Elementor plugin designed to display mental health 
 
 ## Usage in Elementor
 
-### Adding the Widget
+### Method 1: Combined Widget (Legacy)
 1. Open any page/post in Elementor editor
 2. Search for "AMFM Map V2" in the widget panel
 3. Drag and drop the widget into your layout
-4. Configure settings in the left panel
+4. Configure map and filter settings in one widget
+
+### Method 2: Separate Widgets (Recommended)
+1. **Add the Filter Widget:**
+   - Search for "AMFM Map V2 Filter" 
+   - Drag to desired location (e.g., left column)
+   - Configure filter options and styling
+
+2. **Add the Map Widget:**
+   - Search for "AMFM Map V2"
+   - Drag to desired location (e.g., right column)
+   - Link to filter widget using Target Map Widget ID (optional)
+
+3. **Configure Communication:**
+   - **Option A**: Leave Target Map Widget ID empty in filter - controls all maps on page
+   - **Option B**: Enter specific map widget ID for targeted control
 
 ### Widget Configuration
 
-#### Content Tab
+#### AMFM Map V2 (Map Only)
+**Content Tab:**
 - **Map Title**: Optional title displayed above the map
+- **Data Source**: Use stored data or custom JSON
+- **Custom JSON Data**: Manual JSON input for testing
+- **Filter Widget ID**: Link to specific filter widget
+
+**Map Settings Tab:**
+- **Map Height**: Adjust map container height (300px - 1200px)
+
+**Style Tab:**
+- **Map Border Radius**: Rounded corners
+- **Box Shadow**: Drop shadow effects
+
+#### AMFM Map V2 Filter (Filter Only)
+**Content Tab:**
+- **Filter Title**: Optional title for filter section
 - **Filter Layout**: Choose between "buttons" or "sidebar"
 - **Data Source**: Use stored data or custom JSON
-- **Custom JSON Data**: Manual JSON input option for testing
-- **Filter Toggles**: Enable/disable specific filter categories
+- **Target Map Widget ID**: Specific map to control (optional)
 
-#### Layout Tab (V2 Widget)
-- **Container Height**: Adjust overall widget height (400px - 1200px)
-- **Filter Panel Width**: Control left panel width (20% - 50%) - *Legacy sidebar only*
+**Filter Categories Tab:**
+- **Show Location Filter**: Toggle state/location filtering
+- **Show Gender Filter**: Toggle gender-based filtering
+- **Show Conditions Filter**: Toggle medical conditions
+- **Show Programs Filter**: Toggle treatment programs
+- **Show Accommodations Filter**: Toggle facility amenities
 
-#### Style Tab
+**Style Tab:**
 - **Filter Button Colors**: Background, text, hover, active states
 - **Button Spacing**: Padding and margins
-- **Border Styling**: Border radius and width
-- **Typography**: Font settings for filter labels
+- **Border Styling**: Border radius and effects
+- **Container Styling**: Background and padding options
 
 ## Technical Implementation
 
 ### File Structure
 ```
 amfm-maps/
-├── amfm-maps.php                    # Main plugin file
+├── amfm-maps.php                         # Main plugin file
 ├── includes/
 │   └── elementor/
-│       ├── class-map-widget.php     # Original map widget
-│       └── class-map-v2-widget.php  # Advanced V2 widget
+│       ├── class-map-widget.php          # Original map widget (legacy)
+│       ├── class-map-v2-widget.php       # V2 map widget (map only)
+│       └── class-map-v2-filter-widget.php # V2 filter widget (filter only)
 ├── admin/
-│   └── class-amfm-maps-admin.php    # Admin interface
+│   └── class-amfm-maps-admin.php         # Admin interface
 ├── assets/
 │   ├── css/
-│   │   └── style.css                # Widget styles
+│   │   └── style.css                     # Widget styles
 │   └── js/
-│       └── script.js                # Map functionality
-├── demo-widget-layout.html          # Demo page
-├── filter-test.html                 # Filter testing
-└── README.md                        # This file
+│       └── script.js                     # Map & filter functionality
+├── demo-widget-layout.html               # Demo page
+├── filter-test.html                      # Filter testing
+└── README.md                             # This file
 ```
 
 ### Widget Classes
@@ -131,29 +184,68 @@ amfm-maps/
 #### MapV2Widget (`class-map-v2-widget.php`)
 - **Class**: `AMFM_Maps\Elementor\MapV2Widget`
 - **Extends**: `\Elementor\Widget_Base`
-- **Features**: Advanced filtering, dual layouts, styling controls
+- **Purpose**: Map display only
+- **Features**: Google Maps integration, marker display, external filter communication
+
+#### MapV2FilterWidget (`class-map-v2-filter-widget.php`)
+- **Class**: `AMFM_Maps\Elementor\MapV2FilterWidget`
+- **Extends**: `\Elementor\Widget_Base`
+- **Purpose**: Filter controls only
+- **Features**: Filter UI, cross-widget communication, styling controls
 
 #### MapWidget (`class-map-widget.php`)
 - **Class**: `AMFM_Maps\Elementor\MapWidget`
 - **Extends**: `\Elementor\Widget_Base`
-- **Features**: Basic map functionality (legacy)
+- **Purpose**: Legacy combined widget
+- **Features**: Basic map functionality (deprecated)
 
 ### JavaScript API
 
-#### Initialization
+#### Map Widget Initialization
 ```javascript
-// Initialize V2 widget
+// Initialize V2 map widget
 amfmMapV2.init({
-    unique_id: "widget_id",
+    unique_id: "amfm_map_v2_123456",
     json_data: facilityData,
-    api_key: "google_maps_api_key"
+    api_key: "google_maps_api_key",
+    filter_id: "amfm_filter_v2_789123" // Optional: link to specific filter
+});
+```
+
+#### Filter Widget Initialization
+```javascript
+// Initialize V2 filter widget
+amfmMapV2Filter.init({
+    unique_id: "amfm_filter_v2_789123",
+    target_map_id: "amfm_map_v2_123456", // Optional: target specific map
+    json_data: facilityData
+});
+```
+
+#### Cross-Widget Communication
+```javascript
+// Custom event system for filter updates
+var event = new CustomEvent('amfmFilterUpdate', {
+    detail: {
+        filters: activeFilters,
+        sourceFilterId: filterId
+    }
+});
+
+// Map widgets listen for this event
+mapContainer.addEventListener('amfmFilterUpdate', function(event) {
+    var externalFilters = event.detail.filters;
+    applyExternalFilters(externalFilters);
 });
 ```
 
 #### Filter Management
 ```javascript
-// Apply filters programmatically
+// Apply filters programmatically (internal filters)
 amfmMapV2.applyFilters();
+
+// Apply external filters (from filter widget)
+amfmMapV2.applyExternalFilters(filterObject);
 
 // Clear all filters
 amfmMapV2.clearAllFilters();

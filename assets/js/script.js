@@ -586,6 +586,7 @@ amfmMapV2.init = function(settings) {
     var unique_id = settings.unique_id;
     var json_data = settings.json_data;
     var api_key = settings.api_key;
+    var filter_id = settings.filter_id;
     
     var map;
     var markers = [];
@@ -789,6 +790,11 @@ amfmMapV2.init = function(settings) {
     
     // Update the results counter
     function updateCounter(count) {
+        updateResultsCounter(count);
+    }
+    
+    // Update results counter (universal function)
+    function updateResultsCounter(count) {
         var counterElement = document.getElementById(unique_id + '_counter');
         if (counterElement) {
             counterElement.textContent = 'Showing ' + count + ' location' + (count !== 1 ? 's' : '');
@@ -805,7 +811,22 @@ amfmMapV2.init = function(settings) {
         
         console.log('Setting up filter listeners for container:', unique_id);
         
-        // Handle button filters
+        // Check if this map has a linked filter widget
+        var filterIdAttr = container.getAttribute('data-filter-id');
+        if (filterIdAttr) {
+            console.log('Map is linked to external filter widget:', filterIdAttr);
+            
+            // Listen for filter updates from external filter widget
+            container.addEventListener('amfmFilterUpdate', function(event) {
+                console.log('Received filter update from external filter:', event.detail);
+                var externalFilters = event.detail.filters;
+                applyExternalFilters(externalFilters);
+            });
+            
+            return; // Skip setting up internal filters if using external filter
+        }
+        
+        // Handle button filters (internal filters only)
         var filterButtons = container.querySelectorAll('.amfm-filter-button:not(.amfm-clear-filters)');
         var checkboxes = container.querySelectorAll('input[type="checkbox"]');
         var clearButton = container.querySelector('.amfm-clear-filters');
@@ -842,7 +863,103 @@ amfmMapV2.init = function(settings) {
         }
     }
     
-    // Apply filters to the data
+    // Apply external filters from filter widget
+    function applyExternalFilters(externalFilters) {
+        console.log('Applying external filters:', externalFilters);
+        
+        // Filter the data based on PlaceID precision and external filters
+        filteredData = json_data.filter(function(location) {
+            // Skip locations without PlaceID for precision
+            if (!location.PlaceID) {
+                console.log('Skipping location without PlaceID:', location.Name);
+                return false;
+            }
+            
+            // If no filters are active, show all locations with PlaceID
+            var hasActiveFilters = Object.values(externalFilters).some(arr => arr.length > 0);
+            if (!hasActiveFilters) {
+                return true;
+            }
+            
+            // Location filter
+            if (externalFilters.location && externalFilters.location.length > 0) {
+                var locationMatch = false;
+                externalFilters.location.forEach(function(filterLocation) {
+                    var stateAbbr = getStateAbbreviation(filterLocation);
+                    if (location.State === stateAbbr) {
+                        locationMatch = true;
+                    }
+                });
+                if (!locationMatch) {
+                    console.log('Location filter failed for:', location.Name, 'State:', location.State, 'Required:', externalFilters.location);
+                    return false;
+                }
+            }
+            
+            // Gender filter
+            if (externalFilters.gender && externalFilters.gender.length > 0) {
+                if (!externalFilters.gender.includes(location['Details: Gender'])) {
+                    console.log('Gender filter failed for:', location.Name, 'Gender:', location['Details: Gender'], 'Required:', externalFilters.gender);
+                    return false;
+                }
+            }
+            
+            // Conditions filter
+            if (externalFilters.conditions && externalFilters.conditions.length > 0) {
+                var conditionMatch = false;
+                externalFilters.conditions.forEach(function(condition) {
+                    if (location['Conditions: ' + condition] == 1) {
+                        conditionMatch = true;
+                    }
+                });
+                if (!conditionMatch) {
+                    console.log('Conditions filter failed for:', location.Name, 'Required conditions:', externalFilters.conditions);
+                    return false;
+                }
+            }
+            
+            // Programs filter
+            if (externalFilters.programs && externalFilters.programs.length > 0) {
+                var programMatch = false;
+                externalFilters.programs.forEach(function(program) {
+                    if (location['Programs: ' + program] == 1) {
+                        programMatch = true;
+                    }
+                });
+                if (!programMatch) {
+                    console.log('Programs filter failed for:', location.Name, 'Required programs:', externalFilters.programs);
+                    return false;
+                }
+            }
+            
+            // Accommodations filter
+            if (externalFilters.accommodations && externalFilters.accommodations.length > 0) {
+                var accommodationMatch = false;
+                externalFilters.accommodations.forEach(function(accommodation) {
+                    if (location['Accomodations: ' + accommodation] == 1) {
+                        accommodationMatch = true;
+                    }
+                });
+                if (!accommodationMatch) {
+                    console.log('Accommodations filter failed for:', location.Name, 'Required accommodations:', externalFilters.accommodations);
+                    return false;
+                }
+            }
+            
+            console.log('Location passed all external filters:', location.Name);
+            return true;
+        });
+        
+        console.log('Filtered locations count from external filters:', filteredData.length);
+        
+        // Update results counter
+        updateResultsCounter(filteredData.length);
+        
+        // Load filtered locations
+        loadLocations(filteredData);
+    }
+    
+    // Apply filters to the data (internal filters)
     function applyFilters() {
         var container = document.getElementById(unique_id);
         if (!container) return;
@@ -995,7 +1112,7 @@ amfmMapV2.init = function(settings) {
         
         // Reset to show all locations with PlaceID
         filteredData = json_data.filter(function(location) {
-            return location.PlaceID; // Only show locations with PlaceID for precision
+            return location.PlaceID; // Only show locations with PlaceID
         });
         
         console.log('After clearing filters, showing:', filteredData.length, 'locations');
@@ -1017,4 +1134,178 @@ amfmMapV2.init = function(settings) {
         };
         return states[stateName] || stateName;
     }
+};
+
+// AMFM Map V2 Filter Widget JavaScript
+var amfmMapV2Filter = {};
+window.amfmMapV2Filter = amfmMapV2Filter;
+
+amfmMapV2Filter.init = function(settings) {
+    var unique_id = settings.unique_id;
+    var target_map_id = settings.target_map_id;
+    var json_data = settings.json_data;
+    
+    console.log('Initializing AMFM Filter V2:', unique_id);
+    console.log('Target map ID:', target_map_id);
+    
+    // Set up filter event listeners
+    function setupFilterListeners() {
+        var container = document.getElementById(unique_id);
+        if (!container) {
+            console.error('Filter container not found:', unique_id);
+            return;
+        }
+        
+        console.log('Setting up filter listeners for filter widget:', unique_id);
+        
+        // Handle button filters
+        var filterButtons = container.querySelectorAll('.amfm-filter-button:not(.amfm-clear-filters)');
+        var checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        var clearButton = container.querySelector('.amfm-clear-filters');
+        
+        console.log('Found filter elements:', {
+            buttons: filterButtons.length,
+            checkboxes: checkboxes.length,
+            clearButton: clearButton ? 'found' : 'not found'
+        });
+        
+        // Add event listeners to filter buttons
+        filterButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                console.log('Filter button clicked:', button.getAttribute('data-filter-type'), button.getAttribute('data-filter-value'));
+                button.classList.toggle('active');
+                notifyMapWidgets();
+            });
+        });
+        
+        // Add event listeners to checkboxes (for sidebar layout)
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                console.log('Checkbox changed:', checkbox.name, checkbox.value, checkbox.checked);
+                notifyMapWidgets();
+            });
+        });
+        
+        // Add event listener to clear button
+        if (clearButton) {
+            clearButton.addEventListener('click', function() {
+                console.log('Clear button clicked in filter widget');
+                clearAllFilters();
+            });
+        }
+    }
+    
+    // Get active filters from the filter widget
+    function getActiveFilters() {
+        var container = document.getElementById(unique_id);
+        if (!container) return {};
+        
+        var activeFilters = {
+            location: [],
+            gender: [],
+            conditions: [],
+            programs: [],
+            accommodations: []
+        };
+        
+        // Collect active filters from buttons
+        var activeButtons = container.querySelectorAll('.amfm-filter-button.active:not(.amfm-clear-filters)');
+        activeButtons.forEach(function(button) {
+            var filterType = button.getAttribute('data-filter-type');
+            var filterValue = button.getAttribute('data-filter-value');
+            
+            if (activeFilters[filterType]) {
+                activeFilters[filterType].push(filterValue);
+            }
+        });
+        
+        // Collect active filters from checkboxes (sidebar layout)
+        var checkedBoxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        checkedBoxes.forEach(function(checkbox) {
+            var filterType = checkbox.name;
+            var filterValue = checkbox.value;
+            
+            if (activeFilters[filterType]) {
+                activeFilters[filterType].push(filterValue);
+            }
+        });
+        
+        return activeFilters;
+    }
+    
+    // Notify target map widgets about filter changes
+    function notifyMapWidgets() {
+        var activeFilters = getActiveFilters();
+        console.log('Notifying map widgets with filters:', activeFilters);
+        
+        // Find target map widget(s)
+        var mapWidgets = [];
+        
+        if (target_map_id) {
+            // Specific target map
+            var targetMap = document.getElementById(target_map_id);
+            if (targetMap) {
+                mapWidgets.push(target_map_id);
+            }
+        } else {
+            // Find all AMFM map widgets on the page
+            var allMapContainers = document.querySelectorAll('[id^="amfm_map_v2_"]');
+            allMapContainers.forEach(function(container) {
+                if (container.querySelector('.amfm-map-wrapper')) {
+                    mapWidgets.push(container.id);
+                }
+            });
+        }
+        
+        console.log('Found map widgets to update:', mapWidgets);
+        
+        // Send filter update to each map widget
+        mapWidgets.forEach(function(mapId) {
+            // Trigger custom event for map widget to listen to
+            var event = new CustomEvent('amfmFilterUpdate', {
+                detail: {
+                    filters: activeFilters,
+                    sourceFilterId: unique_id
+                }
+            });
+            
+            var mapContainer = document.getElementById(mapId);
+            if (mapContainer) {
+                mapContainer.dispatchEvent(event);
+            }
+        });
+    }
+    
+    // Clear all filters in the filter widget
+    function clearAllFilters() {
+        var container = document.getElementById(unique_id);
+        if (!container) return;
+        
+        console.log('Clearing all filters in filter widget...');
+        
+        // Clear button filters
+        var activeButtons = container.querySelectorAll('.amfm-filter-button.active:not(.amfm-clear-filters)');
+        activeButtons.forEach(function(button) {
+            button.classList.remove('active');
+        });
+        
+        // Clear checkbox filters
+        var checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+        
+        // Notify map widgets
+        notifyMapWidgets();
+    }
+    
+    // Initialize the filter widget
+    setupFilterListeners();
+    
+    // Expose methods for external access
+    return {
+        getActiveFilters: getActiveFilters,
+        clearAllFilters: clearAllFilters,
+        notifyMapWidgets: notifyMapWidgets
+    };
 };

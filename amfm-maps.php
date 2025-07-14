@@ -3,7 +3,7 @@
 /**
  * Plugin Name: AMFM Maps
  * Description: A custom Elementor module to display various maps and elements.
- * Version: 2.1.1
+ * Version: 2.2.0
  * Author:            Adrian T. Saycon
  * Author URI:        https://adzbyte.com/
  * License:           GPL-2.0+
@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define version
-define('AMFM_MAPS_VERSION', '2.1.1');
+define('AMFM_MAPS_VERSION', '2.2.0');
 define('AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc');
 
 // Check if Elementor is installed and active
@@ -51,6 +51,7 @@ function amfm_maps_init()
     // Include the necessary files
     require_once __DIR__ . '/includes/elementor/class-map-widget.php';
     require_once __DIR__ . '/includes/elementor/class-map-v2-widget.php';
+    require_once __DIR__ . '/includes/elementor/class-map-v2-filter-widget.php';
     require_once __DIR__ . '/admin/class-amfm-maps-admin.php';
 
     // Register the widgets
@@ -58,7 +59,20 @@ function amfm_maps_init()
     {
         \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapWidget());
         \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapV2Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapV2FilterWidget());
     }
+
+    // Add custom Elementor category
+    function add_amfm_elementor_category($elements_manager) {
+        $elements_manager->add_category(
+            'amfm-maps',
+            [
+                'title' => __('AMFM Maps', 'amfm-maps'),
+                'icon' => 'eicon-map-pin',
+            ]
+        );
+    }
+    add_action('elementor/elements/categories_registered', 'add_amfm_elementor_category');
 
     // Hook to register the widgets
     add_action('elementor/widgets/widgets_registered', 'register_amfm_map_widgets');
