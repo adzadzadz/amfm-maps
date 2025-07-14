@@ -1,4 +1,5 @@
 jQuery(document).ready(function ($) {
+    console.log('🔥 AMFM Maps Script v2.3.0 - LOADED WITH FALLBACK SUPPORT! 🔥');
     console.log('AMFM Maps');
 
     // Ensure the drawer container exists
@@ -78,7 +79,8 @@ amfm.initMap = function (settings) {
     // Store the map instance in the global object
     window.amfmMaps[unique_id] = {
         map: map,
-        searchLocations: searchLocations // Expose searchLocations for this map instance
+        searchLocations: searchLocations, // Expose searchLocations for this map instance
+        markers: markers // Expose markers for testing
     };
 
     var infowindow = new google.maps.InfoWindow();
@@ -579,18 +581,50 @@ amfm.initMap = function (settings) {
 }
 
 // AMFM Map V2 Widget JavaScript
-var amfmMapV2 = {};
-window.amfmMapV2 = amfmMapV2;
+// Check if global object already exists, if not create it with registry structure
+if (!window.amfmMapV2) {
+    window.amfmMapV2 = {
+        maps: {},        // Store multiple map instances by ID
+        markers: {},     // Store markers by map ID  
+        instances: {},   // Store configuration by map ID
+        filteredData: {},// Store filtered data by map ID
+        loadLocations: {},// Store loadLocations functions by map ID
+        // Backward compatibility properties (will point to first initialized map)
+        map: null,
+        markers: [],
+        loadLocations: null
+    };
+}
+var amfmMapV2 = window.amfmMapV2;
 
 amfmMapV2.init = function(settings) {
     var unique_id = settings.unique_id;
+    
+    // Prevent double initialization
+    if (amfmMapV2.instances && amfmMapV2.instances[unique_id]) {
+        console.log('⚠️ Map', unique_id, 'already initialized, skipping...');
+        return;
+    }
+    
     var json_data = settings.json_data;
     var api_key = settings.api_key;
-    var filter_id = settings.filter_id;
     
     var map;
     var markers = [];
     var filteredData = json_data.slice(); // Copy of data for filtering
+    
+    // Store this instance's data in the registry with null checks
+    if (!amfmMapV2.markers) amfmMapV2.markers = {};
+    if (!amfmMapV2.filteredData) amfmMapV2.filteredData = {};
+    if (!amfmMapV2.instances) amfmMapV2.instances = {};
+    if (!amfmMapV2.maps) amfmMapV2.maps = {};
+    if (!amfmMapV2.loadLocations) amfmMapV2.loadLocations = {};
+    
+    amfmMapV2.markers[unique_id] = markers;
+    amfmMapV2.filteredData[unique_id] = filteredData;
+    amfmMapV2.instances[unique_id] = settings;
+    
+    console.log('🔍 Registry setup for unique_id:', unique_id, 'markers array length:', markers.length);
     
     // Initialize the map
     function initMap() {
@@ -613,11 +647,22 @@ amfmMapV2.init = function(settings) {
             fullscreenControl: true
         });
         
-        console.log('Map initialized for:', unique_id);
+        // Expose the map instance in the registry
+        amfmMapV2.maps[unique_id] = map;
         
-        // Add a slight delay to ensure map is fully rendered
-        google.maps.event.addListenerOnce(map, 'idle', function() {
-            console.log('Map idle event fired, loading locations...');
+        // For backward compatibility, set the first map as the default
+        if (!amfmMapV2.map) {
+            amfmMapV2.map = map;
+            // Note: Don't overwrite amfmMapV2.markers object, it contains multiple map instances
+        }
+        
+        console.log('Map initialized for:', unique_id);
+        console.log('🔍 About to set up initialization timeouts...');
+        
+        // Instead of relying on the unreliable 'idle' event, use a more robust approach
+        function initializeMapData() {
+            console.log('🚀 Initializing map data and filters...');
+            
             // Filter data to only include locations with PlaceID for precision
             filteredData = json_data.filter(function(location) {
                 return location.PlaceID; // Only use locations with PlaceID
@@ -631,9 +676,41 @@ amfmMapV2.init = function(settings) {
             // Load locations initially
             loadLocations(filteredData);
             
+            // Store loadLocations function in registry
+            amfmMapV2.loadLocations[unique_id] = loadLocations;
+            
+            // For backward compatibility, set the first loadLocations as the default
+            if (!amfmMapV2.loadLocations) {
+                amfmMapV2.loadLocations = loadLocations;
+            }
+            
             // Set up filter event listeners
             setupFilterListeners();
+        }
+        
+        // Try immediate initialization (most reliable for most environments)
+        setTimeout(function() {
+            if (!amfmMapV2.loadLocations || !amfmMapV2.loadLocations[unique_id]) {
+                console.log('🎯 Immediate initialization...');
+                initializeMapData();
+            }
+        }, 100);
+        
+        // Also try idle event as fallback (for environments where it works)
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+            if (!amfmMapV2.loadLocations || !amfmMapV2.loadLocations[unique_id]) {
+                console.log('Map idle event fired, loading locations...');
+                initializeMapData();
+            }
         });
+        
+        // Final fallback timeout (in case both above methods fail)
+        setTimeout(function() {
+            if (!amfmMapV2.loadLocations || !amfmMapV2.loadLocations[unique_id]) {
+                console.log('⚠️ Using final fallback initialization...');
+                initializeMapData();
+            }
+        }, 2000);
     }
     
     // Check if Google Maps is loaded and initialize
@@ -656,16 +733,14 @@ amfmMapV2.init = function(settings) {
     // Start the initialization process
     checkGoogleMapsAndInit();
     
-    // Load locations on the map using PlaceID only
+    // Load locations on the map using PlaceID only - IMPROVED VERSION
     function loadLocations(data) {
         console.log('loadLocations called with', data ? data.length : 0, 'locations');
         
-        // Clear existing markers
-        clearMarkers();
-        
         if (!data || data.length === 0) {
-            console.log('No data to load, updating counter to 0');
-            updateCounter(0);
+            console.log('No data to load, hiding all markers and updating counter to 0');
+            hideAllMarkers();
+            updateResultsCounter(0);
             return;
         }
         
@@ -674,19 +749,46 @@ amfmMapV2.init = function(settings) {
         var validLocations = 0;
         var processedCount = 0;
         var totalLocations = data.filter(location => location.PlaceID).length;
+        var dataPlaceIds = data.map(location => location.PlaceID).filter(id => id);
         
         console.log('Total locations with PlaceID:', totalLocations);
         
         if (totalLocations === 0) {
             console.log('No locations with PlaceID found');
-            updateCounter(0);
+            hideAllMarkers();
+            updateResultsCounter(0);
             return;
         }
         
+        // Hide all markers first
+        hideAllMarkers();
+        
+        // Show only markers that match the filtered data
+        markers.forEach(function(markerData) {
+            if (dataPlaceIds.includes(markerData.placeId)) {
+                markerData.marker.setVisible(true);
+                bounds.extend(markerData.marker.getPosition());
+                validLocations++;
+            }
+        });
+        
+        // If we already have all the markers we need, just update the bounds and counter
+        var existingPlaceIds = markers.map(m => m.placeId);
+        var newPlaceIds = dataPlaceIds.filter(id => !existingPlaceIds.includes(id));
+        
+        if (newPlaceIds.length === 0) {
+            // All markers already exist, just fit bounds and update counter
+            updateResultsCounter(validLocations);
+            if (validLocations > 0 && !bounds.isEmpty()) {
+                map.fitBounds(bounds);
+            }
+            return;
+        }
+        
+        // Create new markers for places we don't have yet
         data.forEach(function(location) {
-            if (!location.PlaceID) {
-                console.log('Skipping location without PlaceID:', location.Name);
-                return;
+            if (!location.PlaceID || existingPlaceIds.includes(location.PlaceID)) {
+                return; // Skip if no PlaceID or marker already exists
             }
             
             var request = {
@@ -696,6 +798,7 @@ amfmMapV2.init = function(settings) {
             
             service.getDetails(request, function(place, status) {
                 processedCount++;
+                console.log('Places API request processed:', processedCount, '/', newPlaceIds.length, 'Status:', status);
                 
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     var marker = new google.maps.Marker({
@@ -704,33 +807,54 @@ amfmMapV2.init = function(settings) {
                         title: place.name
                     });
                     
-                    markers.push(marker);
+                    // Store marker with placeId for efficient filtering
+                    var markerData = {
+                        marker: marker,
+                        placeId: location.PlaceID,
+                        location: location,
+                        place: place
+                    };
+                    
+                    markers.push(markerData);
                     bounds.extend(place.geometry.location);
                     validLocations++;
                     
-                    // Create info window content
-                    var infoContent = createInfoWindowContent(location, place);
-                    var infoWindow = new google.maps.InfoWindow({
-                        content: infoContent
-                    });
+                    console.log('Marker created for:', place.name, 'Total markers:', markers.length);
+                    console.log('Registry markers length for', unique_id, ':', amfmMapV2.markers[unique_id] ? amfmMapV2.markers[unique_id].length : 'not found');
+                    console.log('Array reference check:', markers === amfmMapV2.markers[unique_id]);
                     
+                    // Add click listener for popup/drawer
                     marker.addListener('click', function() {
-                        // Close all other info windows
-                        markers.forEach(function(m) {
-                            if (m.infoWindow) {
-                                m.infoWindow.close();
-                            }
-                        });
-                        
-                        infoWindow.open(map, marker);
-                        marker.infoWindow = infoWindow;
+                        var content = generateInfoWindowContent(place, location);
+                        if (isMobile()) {
+                            openDrawer(content);
+                        } else {
+                            var infoWindow = new google.maps.InfoWindow({
+                                content: content,
+                                maxWidth: 400
+                            });
+                            
+                            // Close other info windows
+                            markers.forEach(function(m) {
+                                if (m.infoWindow) {
+                                    m.infoWindow.close();
+                                }
+                            });
+                            
+                            infoWindow.open(map, marker);
+                            markerData.infoWindow = infoWindow;
+                        }
                     });
+                } else {
+                    console.error('Places API error for PlaceID', location.PlaceID, ':', status);
                 }
                 
-                // When all locations are processed, update the map view
-                if (processedCount === totalLocations) {
-                    updateCounter(validLocations);
+                // When all new locations are processed, update the map view
+                if (processedCount === newPlaceIds.length) {
+                    console.log('All new Places API requests completed. Total valid locations:', validLocations);
+                    updateResultsCounter(validLocations);
                     if (!bounds.isEmpty() && validLocations > 0) {
+                        console.log('Fitting map bounds for', validLocations, 'markers');
                         map.fitBounds(bounds);
                         // Limit zoom level
                         google.maps.event.addListenerOnce(map, 'idle', function() {
@@ -738,54 +862,216 @@ amfmMapV2.init = function(settings) {
                                 map.setZoom(10);
                             }
                         });
+                    } else {
+                        console.log('No valid locations to display on map');
                     }
                 }
             });
         });
     }
     
-    // Clear all markers from the map
-    function clearMarkers() {
-        markers.forEach(function(marker) {
-            if (marker.infoWindow) {
-                marker.infoWindow.close();
+    // Hide all markers without removing them
+    function hideAllMarkers() {
+        console.log('Hiding all markers');
+        markers.forEach(function(markerData) {
+            markerData.marker.setVisible(false);
+            if (markerData.infoWindow) {
+                markerData.infoWindow.close();
             }
-            marker.setMap(null);
         });
-        markers = [];
     }
     
-    // Create info window content
-    function createInfoWindowContent(locationData, placeData) {
-        var html = '<div class="amfm-map-info-window">';
-        html += '<h4>' + (placeData.name || locationData['(Internal) Name'] || 'AMFM Location') + '</h4>';
+    // Clear all markers from the map (only used for complete reset)
+    function clearMarkers() {
+        console.log('Clearing', markers.length, 'markers from map');
+        markers.forEach(function(markerData) {
+            if (markerData.infoWindow) {
+                markerData.infoWindow.close();
+            }
+            markerData.marker.setMap(null);
+        });
+        markers = [];
+        // Keep global markers array in sync
+        amfmMapV2.markers = markers;
+        console.log('All markers cleared, markers array length:', markers.length);
+    }
+    
+    // Generate enhanced info window content with image slider
+    function generateInfoWindowContent(place, locationData) {
+        var photos = place.photos || [];
+        var photoSlider = '';
+
+        // Create photo slider if photos exist
+        if (photos.length > 0) {
+            photoSlider = '<div class="amfm-maps-photo-slider owl-carousel">';
+            photos.forEach(function (photo) {
+                var photoUrl = photo.getUrl({ maxWidth: 400, maxHeight: 250 });
+                photoSlider += `<div class="amfm-maps-photo-slide">
+                                    <img src="${photoUrl}" alt="Photo" style="width: 100%; height: auto; border-radius: 8px;">
+                                </div>`;
+            });
+            photoSlider += '</div>';
+        } else if (locationData && locationData.Image) {
+            // Fallback to location data image
+            photoSlider = `<div class="amfm-maps-single-photo">
+                            <img src="${locationData.Image}" alt="Location Image" style="width: 100%; max-width: 400px; height: auto; border-radius: 8px; margin: 10px 0;">
+                           </div>`;
+        }
+
+        // Clean website URL (remove UTM parameters)
+        var cleanWebsite = place.website;
+        if (cleanWebsite) {
+            try {
+                const url = new URL(cleanWebsite);
+                const params = new URLSearchParams(url.search);
+                params.delete('utm_source');
+                params.delete('utm_medium');
+                params.delete('utm_campaign');
+                cleanWebsite = url.origin + url.pathname + (params.toString() ? '?' + params.toString() : '');
+            } catch (e) {
+                // Keep original URL if parsing fails
+            }
+        }
+
+        var content = `
+            <div class="amfm-map-info-content" style="line-height: 1.6; max-width: 380px;">
+                ${photoSlider}
+                <div class="amfm-maps-info-wrapper" style="padding: 10px 0;">
+                    <!-- Name -->
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #333;">
+                        ${place.name || locationData?.['(Internal) Name'] || 'AMFM Location'}
+                    </div>
+                    
+                    <!-- Rating -->
+                    ${place.rating ? `<div style="font-size: 14px; margin-bottom: 8px; display: flex; align-items: center;">
+                        <span style="color: #333; margin-right: 5px;">${place.rating.toFixed(1)}</span> 
+                        <span style="color: #ffc107;">${generateStars(place.rating)}</span>
+                    </div>` : ""}
+                    
+                    <!-- Address -->
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        ${place.formatted_address || "Address not available"}
+                    </div>
+                    
+                    <!-- Phone -->
+                    ${place.formatted_phone_number ? `<div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        <strong>Phone:</strong> ${place.formatted_phone_number}
+                    </div>` : ""}
+                    
+                    <!-- Hours -->
+                    ${place.opening_hours?.weekday_text ? `<div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        <strong>Hours:</strong> ${place.opening_hours.weekday_text[0] || 'See website for hours'}
+                    </div>` : ""}
+                    
+                    <!-- Additional Info from Location Data -->
+                    ${locationData?.['Details: Gender'] ? `<div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+                        <strong>Gender:</strong> ${locationData['Details: Gender']}
+                    </div>` : ""}
+                    
+                    ${locationData?.['Details: Age Groups'] ? `<div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+                        <strong>Age Groups:</strong> ${locationData['Details: Age Groups']}
+                    </div>` : ""}
+                    
+                    <!-- Website Button -->
+                    ${cleanWebsite ? `<div style="margin-top: 15px;">
+                        <a href="${cleanWebsite}" target="_blank" class="amfm-website-button" 
+                           style="display: inline-block; background: #007cba; color: white; padding: 10px 20px; 
+                                  text-decoration: none; border-radius: 5px; font-weight: bold; text-align: center;">
+                            View Location
+                        </a>
+                    </div>` : ""}
+                </div>
+            </div>
+        `;
+        return content;
+    }
+    
+    // Generate star rating HTML
+    function generateStars(rating) {
+        var stars = '';
+        var fullStars = Math.floor(rating);
+        var hasHalfStar = rating % 1 >= 0.5;
         
-        if (locationData.Image) {
-            html += '<img src="' + locationData.Image + '" alt="Location Image" style="width: 100%; max-width: 250px; height: auto; margin: 10px 0;">';
+        for (var i = 0; i < fullStars; i++) {
+            stars += '★';
+        }
+        if (hasHalfStar) {
+            stars += '☆';
+        }
+        for (var i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++) {
+            stars += '☆';
+        }
+        return stars;
+    }
+    
+    // Mobile detection
+    function isMobile() {
+        return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    
+    // Enhanced drawer functionality
+    function openDrawer(content) {
+        // Ensure drawer exists (it should from the top of the file)
+        if (!jQuery('#amfm-drawer').length) {
+            console.error('Drawer element not found');
+            return;
         }
         
-        if (placeData.formatted_address) {
-            html += '<p><strong>Address:</strong> ' + placeData.formatted_address + '</p>';
-        }
+        jQuery('#amfm-drawer-content').html(`
+            <div class="amfm-loading-spinner" style="text-align: center; padding: 20px;">
+                <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 10px; color: #666;">Loading...</p>
+            </div>
+            ${content}
+        `);
         
-        if (locationData['Details: Gender']) {
-            html += '<p><strong>Gender:</strong> ' + locationData['Details: Gender'] + '</p>';
-        }
-        
-        if (locationData['(Internal) Beds']) {
-            html += '<p><strong>Beds:</strong> ' + locationData['(Internal) Beds'] + '</p>';
-        }
-        
-        if (placeData.rating) {
-            html += '<p><strong>Rating:</strong> ' + placeData.rating + ' ★</p>';
-        }
-        
-        if (locationData.URL) {
-            html += '<p><a href="' + locationData.URL + '" target="_blank" style="color: #007cba; text-decoration: none;">Learn More</a></p>';
-        }
-        
-        html += '</div>';
-        return html;
+        jQuery('#amfm-drawer').addClass('open');
+        jQuery('#amfm-drawer-overlay').addClass('visible');
+
+        // Initialize Owl Carousel after content loads
+        setTimeout(function() {
+            if (jQuery('.amfm-maps-photo-slider').length > 0) {
+                // Wait for images to load before initializing carousel
+                jQuery('.amfm-maps-photo-slider').imagesLoaded(function () {
+                    jQuery('.amfm-loading-spinner').remove();
+                    
+                    if (!jQuery('.amfm-maps-photo-slider').hasClass('owl-loaded')) {
+                        jQuery('.amfm-maps-photo-slider').owlCarousel({
+                            items: 1,
+                            loop: photos.length > 1,
+                            nav: true,
+                            navText: ['‹', '›'],
+                            dots: photos.length > 1,
+                            autoplay: photos.length > 1,
+                            autoplayTimeout: 4000,
+                            autoplayHoverPause: true,
+                            responsive: {
+                                0: { items: 1 },
+                                600: { items: 1 },
+                                1000: { items: 1 }
+                            }
+                        });
+                    }
+                });
+            } else {
+                jQuery('.amfm-loading-spinner').remove();
+            }
+        }, 100);
+    }
+    
+    // Clear all markers from the map (only used for complete reset)
+    function clearMarkers() {
+        console.log('Clearing', markers.length, 'markers from map');
+        markers.forEach(function(markerData) {
+            if (markerData.infoWindow) {
+                markerData.infoWindow.close();
+            }
+            markerData.marker.setMap(null);
+        });
+        markers = [];
+        // Keep global markers array in sync
+        amfmMapV2.markers[unique_id] = markers;
+        console.log('All markers cleared, markers array length:', markers.length);
     }
     
     // Update the results counter
@@ -809,66 +1095,79 @@ amfmMapV2.init = function(settings) {
             return;
         }
         
-        console.log('Setting up filter listeners for container:', unique_id);
+        console.log('🔧 Setting up filter listeners for container:', unique_id, 'Container element found:', !!container);
         
-        // Check if this map has a linked filter widget
-        var filterIdAttr = container.getAttribute('data-filter-id');
-        if (filterIdAttr) {
-            console.log('Map is linked to external filter widget:', filterIdAttr);
-            
-            // Listen for filter updates from external filter widget
-            container.addEventListener('amfmFilterUpdate', function(event) {
-                console.log('Received filter update from external filter:', event.detail);
-                var externalFilters = event.detail.filters;
-                applyExternalFilters(externalFilters);
-            });
-            
-            return; // Skip setting up internal filters if using external filter
-        }
+        // All map widgets listen for external filter updates
+        container.addEventListener('amfmFilterUpdate', function(event) {
+            console.log('🎯 Received filter update from external filter on container:', unique_id, 'Event detail:', event.detail);
+            var externalFilters = event.detail.filters;
+            applyExternalFilters(externalFilters);
+        });
         
-        // Handle button filters (internal filters only)
+        // Check if this widget has internal filters (legacy combined widget support)
         var filterButtons = container.querySelectorAll('.amfm-filter-button:not(.amfm-clear-filters)');
         var checkboxes = container.querySelectorAll('input[type="checkbox"]');
         var clearButton = container.querySelector('.amfm-clear-filters');
         
-        console.log('Found filter elements:', {
-            buttons: filterButtons.length,
-            checkboxes: checkboxes.length,
-            clearButton: clearButton ? 'found' : 'not found'
-        });
-        
-        // Add event listeners to filter buttons
-        filterButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                console.log('Filter button clicked:', button.getAttribute('data-filter-type'), button.getAttribute('data-filter-value'));
-                button.classList.toggle('active');
-                applyFilters();
+        if (filterButtons.length > 0 || checkboxes.length > 0) {
+            console.log('Found internal filter elements:', {
+                buttons: filterButtons.length,
+                checkboxes: checkboxes.length,
+                clearButton: clearButton ? 'found' : 'not found'
             });
-        });
-        
-        // Add event listeners to checkboxes (for sidebar layout)
-        checkboxes.forEach(function(checkbox) {
-            checkbox.addEventListener('change', function() {
-                console.log('Checkbox changed:', checkbox.name, checkbox.value, checkbox.checked);
-                applyFilters();
+            
+            // Add event listeners to filter buttons (internal filters)
+            filterButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    console.log('Internal filter button clicked:', button.getAttribute('data-filter-type'), button.getAttribute('data-filter-value'));
+                    button.classList.toggle('active');
+                    applyFilters();
+                });
             });
-        });
-        
-        // Add event listener to clear button
-        if (clearButton) {
-            clearButton.addEventListener('click', function() {
-                console.log('Clear button clicked');
-                clearAllFilters();
+            
+            // Add event listeners to checkboxes (for sidebar layout)
+            checkboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    console.log('Internal checkbox changed:', checkbox.name, checkbox.value, checkbox.checked);
+                    applyFilters();
+                });
             });
+            
+            // Add event listener to clear button
+            if (clearButton) {
+                clearButton.addEventListener('click', function() {
+                    console.log('Internal clear button clicked');
+                    clearAllFilters();
+                });
+            }
         }
     }
     
     // Apply external filters from filter widget
     function applyExternalFilters(externalFilters) {
         console.log('Applying external filters:', externalFilters);
+        console.log('Available maps in registry:', Object.keys(amfmMapV2.maps));
+        console.log('Current map instance ID:', unique_id);
+        
+        // Get the map and data for this specific instance
+        var currentMap = amfmMapV2.maps[unique_id];
+        var currentMarkers = amfmMapV2.markers[unique_id];
+        var currentData = amfmMapV2.instances[unique_id]?.json_data;
+        
+        console.log('Map object exists:', !!currentMap);
+        console.log('Map instance:', currentMap);
+        
+        // Ensure map is initialized before applying filters
+        if (!currentMap || !currentData) {
+            console.error('Map or data not found for ID:', unique_id, {
+                map: !!currentMap,
+                data: !!currentData
+            });
+            return;
+        }
         
         // Filter the data based on PlaceID precision and external filters
-        filteredData = json_data.filter(function(location) {
+        var newFilteredData = currentData.filter(function(location) {
             // Skip locations without PlaceID for precision
             if (!location.PlaceID) {
                 console.log('Skipping location without PlaceID:', location.Name);
@@ -950,13 +1249,26 @@ amfmMapV2.init = function(settings) {
             return true;
         });
         
-        console.log('Filtered locations count from external filters:', filteredData.length);
+        console.log('Filtered locations count from external filters:', newFilteredData.length);
+        
+        // Update this instance's filtered data in the registry
+        amfmMapV2.filteredData[unique_id] = newFilteredData;
+        
+        // For backward compatibility, also update global if this is the default map
+        if (amfmMapV2.map === currentMap) {
+            amfmMapV2.filteredData = newFilteredData;
+        }
         
         // Update results counter
-        updateResultsCounter(filteredData.length);
+        updateResultsCounter(newFilteredData.length);
         
-        // Load filtered locations
-        loadLocations(filteredData);
+        // Load filtered locations using the loadLocations function for this instance
+        var loadLocationsFn = amfmMapV2.loadLocations[unique_id];
+        if (loadLocationsFn) {
+            loadLocationsFn(newFilteredData);
+        } else {
+            console.error('loadLocations function not found for map ID:', unique_id);
+        }
     }
     
     // Apply filters to the data (internal filters)
@@ -999,7 +1311,7 @@ amfmMapV2.init = function(settings) {
         console.log('Active filters:', activeFilters);
         console.log('Total locations before filtering:', json_data.length);
         
-        // Filter the data based on PlaceID precision and active filters
+        // Apply filters to the data (internal filters)
         filteredData = json_data.filter(function(location) {
             // Skip locations without PlaceID for precision
             if (!location.PlaceID) {
@@ -1084,11 +1396,25 @@ amfmMapV2.init = function(settings) {
         
         console.log('Filtered locations count:', filteredData.length);
         
+        // Update this instance's filtered data in the registry
+        amfmMapV2.filteredData[unique_id] = filteredData;
+        
+        // For backward compatibility, also update global if this is the default map
+        var currentMap = amfmMapV2.maps[unique_id];
+        if (amfmMapV2.map === currentMap) {
+            amfmMapV2.filteredData = filteredData;
+        }
+        
         // Update results counter
         updateResultsCounter(filteredData.length);
         
-        // Load filtered locations
-        loadLocations(filteredData);
+        // Load filtered locations using the loadLocations function for this instance
+        var loadLocationsFn = amfmMapV2.loadLocations[unique_id];
+        if (loadLocationsFn) {
+            loadLocationsFn(filteredData);
+        } else {
+            console.error('loadLocations function not found for map ID:', unique_id);
+        }
     }
     
     // Clear all filters
@@ -1117,10 +1443,25 @@ amfmMapV2.init = function(settings) {
         
         console.log('After clearing filters, showing:', filteredData.length, 'locations');
         
+        // Update this instance's filtered data in the registry
+        amfmMapV2.filteredData[unique_id] = filteredData;
+        
+        // For backward compatibility, also update global if this is the default map
+        var currentMap = amfmMapV2.maps[unique_id];
+        if (amfmMapV2.map === currentMap) {
+            amfmMapV2.filteredData = filteredData;
+        }
+        
         // Update results counter
         updateResultsCounter(filteredData.length);
         
-        loadLocations(filteredData);
+        // Load filtered locations using the loadLocations function for this instance
+        var loadLocationsFn = amfmMapV2.loadLocations[unique_id];
+        if (loadLocationsFn) {
+            loadLocationsFn(filteredData);
+        } else {
+            console.error('loadLocations function not found for map ID:', unique_id);
+        }
     }
     
     // Helper function to get state abbreviation from full name
@@ -1237,30 +1578,74 @@ amfmMapV2Filter.init = function(settings) {
     function notifyMapWidgets() {
         var activeFilters = getActiveFilters();
         console.log('Notifying map widgets with filters:', activeFilters);
+        console.log('Filter widget target_map_id setting:', target_map_id);
+        
+        // Debug: Show all elements on page starting with amfm_map_v2
+        var allMapElements = document.querySelectorAll('[id^="amfm_map_v2"]');
+        console.log('All elements with IDs starting with amfm_map_v2:');
+        allMapElements.forEach(function(el) {
+            var hasDirectMapWrapper = el.classList.contains('amfm-map-wrapper') || el.children.length > 0 && Array.from(el.children).some(child => child.classList.contains('amfm-map-wrapper'));
+            var hasAnyMapWrapper = !!el.querySelector('.amfm-map-wrapper');
+            console.log('  - Element ID:', el.id, 'Has direct map wrapper:', hasDirectMapWrapper, 'Has any map wrapper:', hasAnyMapWrapper);
+        });
+        
+        // Simple and reliable container targeting
+        function findCorrectMapContainers(targetMapId) {
+            console.log('Finding map containers for target:', targetMapId);
+            var containers = [];
+            
+            if (targetMapId) {
+                // Strategy 1: Look for .amfm-map-v2-container within the target map ID
+                var targetElement = document.getElementById(targetMapId);
+                if (targetElement) {
+                    var mapContainer = targetElement.querySelector('.amfm-map-v2-container');
+                    if (mapContainer) {
+                        console.log('Found map container within target:', mapContainer.id);
+                        containers.push(mapContainer.id);
+                    } else {
+                        console.log('No .amfm-map-v2-container found within target:', targetMapId);
+                    }
+                }
+                
+                // Strategy 2: If target element itself has the class
+                if (targetElement && targetElement.classList.contains('amfm-map-v2-container')) {
+                    console.log('Target element itself is a map container:', targetMapId);
+                    containers.push(targetMapId);
+                }
+            }
+            
+            // Fallback: If no specific target or no containers found, target all .amfm-map-v2-container
+            if (containers.length === 0) {
+                console.log('No specific containers found, targeting all .amfm-map-v2-container elements');
+                var allMapContainers = document.querySelectorAll('.amfm-map-v2-container');
+                allMapContainers.forEach(function(container) {
+                    if (container.id) {
+                        console.log('Found map container:', container.id);
+                        containers.push(container.id);
+                    }
+                });
+            }
+            
+            return containers;
+        }
         
         // Find target map widget(s)
         var mapWidgets = [];
         
         if (target_map_id) {
-            // Specific target map
-            var targetMap = document.getElementById(target_map_id);
-            if (targetMap) {
-                mapWidgets.push(target_map_id);
-            }
+            console.log('Looking for specific target map widget ID:', target_map_id);
+            mapWidgets = findCorrectMapContainers(target_map_id);
         } else {
-            // Find all AMFM map widgets on the page
-            var allMapContainers = document.querySelectorAll('[id^="amfm_map_v2_"]');
-            allMapContainers.forEach(function(container) {
-                if (container.querySelector('.amfm-map-wrapper')) {
-                    mapWidgets.push(container.id);
-                }
-            });
+            console.log('No specific target, finding all map containers');
+            mapWidgets = findCorrectMapContainers(null);
         }
         
         console.log('Found map widgets to update:', mapWidgets);
         
         // Send filter update to each map widget
         mapWidgets.forEach(function(mapId) {
+            console.log('Dispatching amfmFilterUpdate event to:', mapId);
+            
             // Trigger custom event for map widget to listen to
             var event = new CustomEvent('amfmFilterUpdate', {
                 detail: {
@@ -1271,7 +1656,10 @@ amfmMapV2Filter.init = function(settings) {
             
             var mapContainer = document.getElementById(mapId);
             if (mapContainer) {
+                console.log('Found map container, dispatching event to:', mapId);
                 mapContainer.dispatchEvent(event);
+            } else {
+                console.log('Map container not found for ID:', mapId);
             }
         });
     }

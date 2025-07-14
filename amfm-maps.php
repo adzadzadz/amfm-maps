@@ -3,7 +3,7 @@
 /**
  * Plugin Name: AMFM Maps
  * Description: A custom Elementor module to display various maps and elements.
- * Version: 2.2.0
+ * Version: 2.3.0
  * Author:            Adrian T. Saycon
  * Author URI:        https://adzbyte.com/
  * License:           GPL-2.0+
@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define version
-define('AMFM_MAPS_VERSION', '2.2.0');
+define('AMFM_MAPS_VERSION', '2.3.1.' . time());
 define('AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc');
 
 // Check if Elementor is installed and active

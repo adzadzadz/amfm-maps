@@ -183,8 +183,8 @@ class MapV2FilterWidget extends Widget_Base
             [
                 'label' => __('Target Map Widget ID', 'amfm-maps'),
                 'type' => Controls_Manager::TEXT,
-                'description' => __('Enter the unique ID of the map widget to filter. Leave empty to target any AMFM map on the page.', 'amfm-maps'),
-                'placeholder' => __('amfm_map_v2_123456', 'amfm-maps'),
+                'description' => __('Enter the Elementor widget ID of the map widget to filter (e.g., "1a2b3c4d"). You can find this in the Navigator panel. Leave empty to target all AMFM maps on the page.', 'amfm-maps'),
+                'placeholder' => __('1a2b3c4d', 'amfm-maps'),
             ]
         );
 
@@ -426,7 +426,10 @@ class MapV2FilterWidget extends Widget_Base
     protected function render()
     {
         $settings = $this->get_settings_for_display();
-        $unique_id = 'amfm_filter_v2_' . uniqid();
+        
+        // Use Elementor's widget ID for consistent targeting
+        $widget_id = $this->get_id();
+        $unique_id = 'amfm_filter_v2_' . $widget_id;
         $filter_layout = $settings['filter_layout'] ?? 'buttons';
         $target_map_id = $settings['target_map_id'] ?? '';
         

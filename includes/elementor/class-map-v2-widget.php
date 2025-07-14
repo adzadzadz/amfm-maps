@@ -87,16 +87,6 @@ class MapV2Widget extends Widget_Base
             ]
         );
 
-        $this->add_control(
-            'filter_id',
-            [
-                'label' => __('Filter Widget ID', 'amfm-maps'),
-                'type' => Controls_Manager::TEXT,
-                'description' => __('Enter the unique ID of the filter widget that controls this map. Leave empty if no external filter is used.', 'amfm-maps'),
-                'placeholder' => __('amfm_filter_v2_123456', 'amfm-maps'),
-            ]
-        );
-
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -181,8 +171,10 @@ class MapV2Widget extends Widget_Base
     protected function render()
     {
         $settings = $this->get_settings_for_display();
-        $unique_id = 'amfm_map_v2_' . uniqid();
-        $filter_id = $settings['filter_id'] ?? '';
+        
+        // Use Elementor's widget ID for consistent targeting
+        $widget_id = $this->get_id();
+        $unique_id = 'amfm_map_v2_' . $widget_id;
         
         // Get JSON data
         $json_data = [];
@@ -194,8 +186,7 @@ class MapV2Widget extends Widget_Base
         
         ?>
         <div class="amfm-map-v2-container amfm-map-only" 
-             id="<?php echo esc_attr($unique_id); ?>"
-             data-filter-id="<?php echo esc_attr($filter_id); ?>">
+             id="<?php echo esc_attr($unique_id); ?>">
             
             <?php if (!empty($settings['map_title'])): ?>
                 <div class="amfm-map-title">
@@ -223,7 +214,6 @@ class MapV2Widget extends Widget_Base
             jQuery(document).ready(function($) {
                 console.log('AMFM Map V2 Widget initializing for:', "<?php echo esc_js($unique_id); ?>");
                 console.log('JSON Data count:', <?php echo count($json_data); ?>);
-                console.log('Filter ID:', "<?php echo esc_js($filter_id); ?>");
                 
                 // Ensure Google Maps API is loaded first
                 function initializeMapV2() {
@@ -232,8 +222,7 @@ class MapV2Widget extends Widget_Base
                         amfmMapV2.init({
                             unique_id: "<?php echo esc_js($unique_id); ?>",
                             json_data: <?php echo json_encode($json_data); ?>,
-                            api_key: "<?php echo esc_js(AMFM_MAPS_API_KEY); ?>",
-                            filter_id: "<?php echo esc_js($filter_id); ?>"
+                            api_key: "<?php echo esc_js(AMFM_MAPS_API_KEY); ?>"
                         });
                     } else {
                         console.log('Waiting for dependencies...', {
