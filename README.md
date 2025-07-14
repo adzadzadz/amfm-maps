@@ -128,7 +128,6 @@ AMFM Maps is a comprehensive Elementor plugin designed to display mental health 
 - **Map Title**: Optional title displayed above the map
 - **Data Source**: Use stored data or custom JSON
 - **Custom JSON Data**: Manual JSON input for testing
-- **Filter Widget ID**: Link to specific filter widget
 
 **Map Settings Tab:**
 - **Map Height**: Adjust map container height (300px - 1200px)
@@ -252,12 +251,11 @@ amfm-maps/
 
 #### Map Widget Initialization
 ```javascript
-// Initialize V2 map widget
+// Initialize V2 map widget (simplified)
 amfmMapV2.init({
     unique_id: "amfm_map_v2_123456",
     json_data: facilityData,
-    api_key: "google_maps_api_key",
-    filter_id: "amfm_filter_v2_789123" // Optional: link to specific filter
+    api_key: "google_maps_api_key"
 });
 ```
 
