@@ -3,7 +3,7 @@
 /**
  * Plugin Name: AMFM Maps
  * Description: A custom Elementor module to display various maps and elements.
- * Version: 1.7.6
+ * Version: 2.1.1
  * Author:            Adrian T. Saycon
  * Author URI:        https://adzbyte.com/
  * License:           GPL-2.0+
@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define version
-define('AMFM_MAPS_VERSION', '2.0.6');
+define('AMFM_MAPS_VERSION', '2.1.1');
 define('AMFM_MAPS_API_KEY', 'AIzaSyAZLD2M_Rnz6p6d-d57bNOWggRUEC3ZmNc');
 
 // Check if Elementor is installed and active
@@ -50,16 +50,18 @@ function amfm_maps_init()
 
     // Include the necessary files
     require_once __DIR__ . '/includes/elementor/class-map-widget.php';
+    require_once __DIR__ . '/includes/elementor/class-map-v2-widget.php';
     require_once __DIR__ . '/admin/class-amfm-maps-admin.php';
 
-    // Register the widget
-    function register_amfm_map_widget()
+    // Register the widgets
+    function register_amfm_map_widgets()
     {
         \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapWidget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapV2Widget());
     }
 
     // Hook to register the widgets
-    add_action('elementor/widgets/widgets_registered', 'register_amfm_map_widget');
+    add_action('elementor/widgets/widgets_registered', 'register_amfm_map_widgets');
 
     // Initialize admin functionality
     if (is_admin()) {
@@ -69,8 +71,18 @@ function amfm_maps_init()
         add_action('admin_enqueue_scripts', array($amfm_maps_admin, 'enqueue_scripts'));
     }
 
+    // Register scripts and styles for Elementor
+    add_action('elementor/frontend/after_register_scripts', function() {
+        wp_register_script('amfm-google-maps', 'https://maps.googleapis.com/maps/api/js?key=' . AMFM_MAPS_API_KEY . '&loading=async&libraries=places', [], null, false);
+        wp_register_script('amfm-maps-script', plugins_url('assets/js/script.js', __FILE__), ['jquery', 'amfm-google-maps'], AMFM_MAPS_VERSION, true);
+        wp_register_style('amfm-maps-style', plugins_url('assets/css/style.css', __FILE__), [], AMFM_MAPS_VERSION);
+    });
+
     // Hook to enqueue assets
     add_action('wp_enqueue_scripts', function () {
+        $should_enqueue = false;
+        
+        // Check if we're on specific pages or if Elementor widgets are present
         if (is_page([
                 'california', 
                 'virginia', 
@@ -81,6 +93,21 @@ function amfm_maps_init()
                 'amfm-lp-2-california',
                 'amfm-lp-2-virginia'
             ])) {
+            $should_enqueue = true;
+        }
+        
+        // Also check if we're in Elementor editor or preview mode
+        if (defined('ELEMENTOR_VERSION') && (\Elementor\Plugin::$instance->editor->is_edit_mode() || \Elementor\Plugin::$instance->preview->is_preview_mode())) {
+            $should_enqueue = true;
+        }
+        
+        // Check if the current post/page contains AMFM map widgets
+        global $post;
+        if ($post && (has_shortcode($post->post_content, 'elementor-template') || strpos($post->post_content, 'amfm_map') !== false)) {
+            $should_enqueue = true;
+        }
+        
+        if ($should_enqueue) {
             // Enqueue imagesLoaded library
             wp_enqueue_script('imagesloaded', 'https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js', ['jquery'], '4.1.4', true);
 

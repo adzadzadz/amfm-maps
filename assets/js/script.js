@@ -515,6 +515,14 @@ amfm.initMap = function (settings) {
         }
     }
 
+    // Update results counter
+    function updateResultsCounter(count) {
+        var counter = document.querySelector('#' + unique_id + '_counter');
+        if (counter) {
+            counter.textContent = 'Showing ' + count + ' locations';
+        }
+    }
+
     window.searchLocations = searchLocations;
     searchLocations(location_query);
 
@@ -569,3 +577,444 @@ amfm.initMap = function (settings) {
         });
     }
 }
+
+// AMFM Map V2 Widget JavaScript
+var amfmMapV2 = {};
+window.amfmMapV2 = amfmMapV2;
+
+amfmMapV2.init = function(settings) {
+    var unique_id = settings.unique_id;
+    var json_data = settings.json_data;
+    var api_key = settings.api_key;
+    
+    var map;
+    var markers = [];
+    var filteredData = json_data.slice(); // Copy of data for filtering
+    
+    // Initialize the map
+    function initMap() {
+        var mapElement = document.getElementById(unique_id + '_map');
+        if (!mapElement) {
+            console.error('Map element not found:', unique_id + '_map');
+            return;
+        }
+        
+        // Remove any loading indicator
+        mapElement.style.background = '';
+        
+        var centerPoint = { lat: 39.8283, lng: -98.5795 }; // Center US
+        map = new google.maps.Map(mapElement, {
+            center: centerPoint,
+            zoom: 4,
+            mapTypeControl: false,
+            zoomControl: true,
+            streetViewControl: false,
+            fullscreenControl: true
+        });
+        
+        console.log('Map initialized for:', unique_id);
+        
+        // Add a slight delay to ensure map is fully rendered
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+            console.log('Map idle event fired, loading locations...');
+            // Filter data to only include locations with PlaceID for precision
+            filteredData = json_data.filter(function(location) {
+                return location.PlaceID; // Only use locations with PlaceID
+            });
+            
+            console.log('Initial load: showing', filteredData.length, 'locations with PlaceID');
+            
+            // Update results counter for initial load
+            updateResultsCounter(filteredData.length);
+            
+            // Load locations initially
+            loadLocations(filteredData);
+            
+            // Set up filter event listeners
+            setupFilterListeners();
+        });
+    }
+    
+    // Check if Google Maps is loaded and initialize
+    function checkGoogleMapsAndInit() {
+        var mapElement = document.getElementById(unique_id + '_map');
+        if (mapElement && typeof google !== 'undefined' && google.maps && google.maps.Map) {
+            console.log('Google Maps API loaded, initializing map...');
+            initMap();
+        } else {
+            console.log('Waiting for Google Maps API to load...');
+            // Add loading indicator
+            if (mapElement) {
+                mapElement.style.background = '#f0f0f0 url("data:image/svg+xml;charset=utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 50 50\'%3E%3Cpath d=\'M25,5A20.14,20.14,0,0,1,45,22.88a2.51,2.51,0,0,0,2.49,2.26h0A2.52,2.52,0,0,0,50,22.33a25.14,25.14,0,0,0-50,0,2.52,2.52,0,0,0,2.5,2.81h0A2.51,2.51,0,0,0,5,22.88,20.14,20.14,0,0,1,25,5Z\'%3E%3CanimateTransform attributeName=\'transform\' type=\'rotate\' from=\'0 25 25\' to=\'360 25 25\' dur=\'0.5s\' repeatCount=\'indefinite\'/%3E%3C/path%3E%3C/svg%3E") center center no-repeat';
+            }
+            // Wait a bit more for Google Maps to load
+            setTimeout(checkGoogleMapsAndInit, 300);
+        }
+    }
+    
+    // Start the initialization process
+    checkGoogleMapsAndInit();
+    
+    // Load locations on the map using PlaceID only
+    function loadLocations(data) {
+        console.log('loadLocations called with', data ? data.length : 0, 'locations');
+        
+        // Clear existing markers
+        clearMarkers();
+        
+        if (!data || data.length === 0) {
+            console.log('No data to load, updating counter to 0');
+            updateCounter(0);
+            return;
+        }
+        
+        var bounds = new google.maps.LatLngBounds();
+        var service = new google.maps.places.PlacesService(map);
+        var validLocations = 0;
+        var processedCount = 0;
+        var totalLocations = data.filter(location => location.PlaceID).length;
+        
+        console.log('Total locations with PlaceID:', totalLocations);
+        
+        if (totalLocations === 0) {
+            console.log('No locations with PlaceID found');
+            updateCounter(0);
+            return;
+        }
+        
+        data.forEach(function(location) {
+            if (!location.PlaceID) {
+                console.log('Skipping location without PlaceID:', location.Name);
+                return;
+            }
+            
+            var request = {
+                placeId: location.PlaceID,
+                fields: ['name', 'geometry', 'formatted_address', 'photos', 'rating', 'opening_hours', 'formatted_phone_number', 'website']
+            };
+            
+            service.getDetails(request, function(place, status) {
+                processedCount++;
+                
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: place.geometry.location,
+                        title: place.name
+                    });
+                    
+                    markers.push(marker);
+                    bounds.extend(place.geometry.location);
+                    validLocations++;
+                    
+                    // Create info window content
+                    var infoContent = createInfoWindowContent(location, place);
+                    var infoWindow = new google.maps.InfoWindow({
+                        content: infoContent
+                    });
+                    
+                    marker.addListener('click', function() {
+                        // Close all other info windows
+                        markers.forEach(function(m) {
+                            if (m.infoWindow) {
+                                m.infoWindow.close();
+                            }
+                        });
+                        
+                        infoWindow.open(map, marker);
+                        marker.infoWindow = infoWindow;
+                    });
+                }
+                
+                // When all locations are processed, update the map view
+                if (processedCount === totalLocations) {
+                    updateCounter(validLocations);
+                    if (!bounds.isEmpty() && validLocations > 0) {
+                        map.fitBounds(bounds);
+                        // Limit zoom level
+                        google.maps.event.addListenerOnce(map, 'idle', function() {
+                            if (map.getZoom() > 10) {
+                                map.setZoom(10);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    }
+    
+    // Clear all markers from the map
+    function clearMarkers() {
+        markers.forEach(function(marker) {
+            if (marker.infoWindow) {
+                marker.infoWindow.close();
+            }
+            marker.setMap(null);
+        });
+        markers = [];
+    }
+    
+    // Create info window content
+    function createInfoWindowContent(locationData, placeData) {
+        var html = '<div class="amfm-map-info-window">';
+        html += '<h4>' + (placeData.name || locationData['(Internal) Name'] || 'AMFM Location') + '</h4>';
+        
+        if (locationData.Image) {
+            html += '<img src="' + locationData.Image + '" alt="Location Image" style="width: 100%; max-width: 250px; height: auto; margin: 10px 0;">';
+        }
+        
+        if (placeData.formatted_address) {
+            html += '<p><strong>Address:</strong> ' + placeData.formatted_address + '</p>';
+        }
+        
+        if (locationData['Details: Gender']) {
+            html += '<p><strong>Gender:</strong> ' + locationData['Details: Gender'] + '</p>';
+        }
+        
+        if (locationData['(Internal) Beds']) {
+            html += '<p><strong>Beds:</strong> ' + locationData['(Internal) Beds'] + '</p>';
+        }
+        
+        if (placeData.rating) {
+            html += '<p><strong>Rating:</strong> ' + placeData.rating + ' ★</p>';
+        }
+        
+        if (locationData.URL) {
+            html += '<p><a href="' + locationData.URL + '" target="_blank" style="color: #007cba; text-decoration: none;">Learn More</a></p>';
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    // Update the results counter
+    function updateCounter(count) {
+        var counterElement = document.getElementById(unique_id + '_counter');
+        if (counterElement) {
+            counterElement.textContent = 'Showing ' + count + ' location' + (count !== 1 ? 's' : '');
+        }
+    }
+    
+    // Set up filter event listeners
+    function setupFilterListeners() {
+        var container = document.getElementById(unique_id);
+        if (!container) {
+            console.error('Container not found for setupFilterListeners:', unique_id);
+            return;
+        }
+        
+        console.log('Setting up filter listeners for container:', unique_id);
+        
+        // Handle button filters
+        var filterButtons = container.querySelectorAll('.amfm-filter-button:not(.amfm-clear-filters)');
+        var checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        var clearButton = container.querySelector('.amfm-clear-filters');
+        
+        console.log('Found filter elements:', {
+            buttons: filterButtons.length,
+            checkboxes: checkboxes.length,
+            clearButton: clearButton ? 'found' : 'not found'
+        });
+        
+        // Add event listeners to filter buttons
+        filterButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                console.log('Filter button clicked:', button.getAttribute('data-filter-type'), button.getAttribute('data-filter-value'));
+                button.classList.toggle('active');
+                applyFilters();
+            });
+        });
+        
+        // Add event listeners to checkboxes (for sidebar layout)
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                console.log('Checkbox changed:', checkbox.name, checkbox.value, checkbox.checked);
+                applyFilters();
+            });
+        });
+        
+        // Add event listener to clear button
+        if (clearButton) {
+            clearButton.addEventListener('click', function() {
+                console.log('Clear button clicked');
+                clearAllFilters();
+            });
+        }
+    }
+    
+    // Apply filters to the data
+    function applyFilters() {
+        var container = document.getElementById(unique_id);
+        if (!container) return;
+        
+        console.log('Applying filters...');
+        
+        var activeFilters = {
+            location: [],
+            gender: [],
+            conditions: [],
+            programs: [],
+            accommodations: []
+        };
+        
+        // Collect active filters from buttons
+        var activeButtons = container.querySelectorAll('.amfm-filter-button.active:not(.amfm-clear-filters)');
+        activeButtons.forEach(function(button) {
+            var filterType = button.getAttribute('data-filter-type');
+            var filterValue = button.getAttribute('data-filter-value');
+            
+            if (activeFilters[filterType]) {
+                activeFilters[filterType].push(filterValue);
+            }
+        });
+        
+        // Collect active filters from checkboxes (sidebar layout)
+        var checkedBoxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        checkedBoxes.forEach(function(checkbox) {
+            var filterType = checkbox.name;
+            var filterValue = checkbox.value;
+            
+            if (activeFilters[filterType]) {
+                activeFilters[filterType].push(filterValue);
+            }
+        });
+        
+        console.log('Active filters:', activeFilters);
+        console.log('Total locations before filtering:', json_data.length);
+        
+        // Filter the data based on PlaceID precision and active filters
+        filteredData = json_data.filter(function(location) {
+            // Skip locations without PlaceID for precision
+            if (!location.PlaceID) {
+                console.log('Skipping location without PlaceID:', location.Name);
+                return false;
+            }
+            
+            // If no filters are active, show all locations with PlaceID
+            var hasActiveFilters = Object.values(activeFilters).some(arr => arr.length > 0);
+            if (!hasActiveFilters) {
+                return true;
+            }
+            
+            // Location filter
+            if (activeFilters.location.length > 0) {
+                var locationMatch = false;
+                activeFilters.location.forEach(function(filterLocation) {
+                    var stateAbbr = getStateAbbreviation(filterLocation);
+                    if (location.State === stateAbbr) {
+                        locationMatch = true;
+                    }
+                });
+                if (!locationMatch) {
+                    console.log('Location filter failed for:', location.Name, 'State:', location.State, 'Required:', activeFilters.location);
+                    return false;
+                }
+            }
+            
+            // Gender filter
+            if (activeFilters.gender.length > 0) {
+                if (!activeFilters.gender.includes(location['Details: Gender'])) {
+                    console.log('Gender filter failed for:', location.Name, 'Gender:', location['Details: Gender'], 'Required:', activeFilters.gender);
+                    return false;
+                }
+            }
+            
+            // Conditions filter
+            if (activeFilters.conditions.length > 0) {
+                var conditionMatch = false;
+                activeFilters.conditions.forEach(function(condition) {
+                    if (location['Conditions: ' + condition] == 1) {
+                        conditionMatch = true;
+                    }
+                });
+                if (!conditionMatch) {
+                    console.log('Conditions filter failed for:', location.Name, 'Required conditions:', activeFilters.conditions);
+                    return false;
+                }
+            }
+            
+            // Programs filter
+            if (activeFilters.programs.length > 0) {
+                var programMatch = false;
+                activeFilters.programs.forEach(function(program) {
+                    if (location['Programs: ' + program] == 1) {
+                        programMatch = true;
+                    }
+                });
+                if (!programMatch) {
+                    console.log('Programs filter failed for:', location.Name, 'Required programs:', activeFilters.programs);
+                    return false;
+                }
+            }
+            
+            // Accommodations filter
+            if (activeFilters.accommodations.length > 0) {
+                var accommodationMatch = false;
+                activeFilters.accommodations.forEach(function(accommodation) {
+                    if (location['Accomodations: ' + accommodation] == 1) {
+                        accommodationMatch = true;
+                    }
+                });
+                if (!accommodationMatch) {
+                    console.log('Accommodations filter failed for:', location.Name, 'Required accommodations:', activeFilters.accommodations);
+                    return false;
+                }
+            }
+            
+            console.log('Location passed all filters:', location.Name);
+            return true;
+        });
+        
+        console.log('Filtered locations count:', filteredData.length);
+        
+        // Update results counter
+        updateResultsCounter(filteredData.length);
+        
+        // Load filtered locations
+        loadLocations(filteredData);
+    }
+    
+    // Clear all filters
+    function clearAllFilters() {
+        var container = document.getElementById(unique_id);
+        if (!container) return;
+        
+        console.log('Clearing all filters...');
+        
+        // Clear button filters
+        var activeButtons = container.querySelectorAll('.amfm-filter-button.active:not(.amfm-clear-filters)');
+        activeButtons.forEach(function(button) {
+            button.classList.remove('active');
+        });
+        
+        // Clear checkbox filters
+        var checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+        
+        // Reset to show all locations with PlaceID
+        filteredData = json_data.filter(function(location) {
+            return location.PlaceID; // Only show locations with PlaceID for precision
+        });
+        
+        console.log('After clearing filters, showing:', filteredData.length, 'locations');
+        
+        // Update results counter
+        updateResultsCounter(filteredData.length);
+        
+        loadLocations(filteredData);
+    }
+    
+    // Helper function to get state abbreviation from full name
+    function getStateAbbreviation(stateName) {
+        var states = {
+            'California': 'CA',
+            'Virginia': 'VA',
+            'Washington': 'WA',
+            'Minnesota': 'MN',
+            'Oregon': 'OR'
+        };
+        return states[stateName] || stateName;
+    }
+};
