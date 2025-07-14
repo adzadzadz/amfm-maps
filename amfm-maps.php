@@ -49,7 +49,6 @@ function amfm_maps_init()
     }
 
     // Include the necessary files
-    require_once __DIR__ . '/includes/elementor/class-map-widget.php';
     require_once __DIR__ . '/includes/elementor/class-map-v2-widget.php';
     require_once __DIR__ . '/includes/elementor/class-map-v2-filter-widget.php';
     require_once __DIR__ . '/admin/class-amfm-maps-admin.php';
@@ -57,7 +56,6 @@ function amfm_maps_init()
     // Register the widgets
     function register_amfm_map_widgets()
     {
-        \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapWidget());
         \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapV2Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new \AMFM_Maps\Elementor\MapV2FilterWidget());
     }
