@@ -59,7 +59,8 @@ class Amfm_Maps_Admin
 		// Add AJAX handlers
 		add_action('wp_ajax_amfm_maps_get_sync_status', array($this, 'ajax_get_sync_status'));
 		add_action('wp_ajax_amfm_maps_manual_sync', array($this, 'ajax_manual_sync'));
-		add_action('wp_ajax_amfm_maps_manual_sync', array($this, 'ajax_manual_sync'));
+		add_action('wp_ajax_amfm_maps_save_filter_config', array($this, 'ajax_save_filter_config'));
+		add_action('wp_ajax_amfm_maps_get_available_filters', array($this, 'ajax_get_available_filters'));
 	}
 
 	/**
@@ -239,16 +240,17 @@ class Amfm_Maps_Admin
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts()
-	{
-		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/amfm-maps-admin.js', array('jquery'), $this->version, false);
-		
-		// Localize script for AJAX
-		wp_localize_script($this->plugin_name, 'amfmMapsAdmin', array(
-			'ajax_url' => admin_url('admin-ajax.php'),
-			'nonce' => wp_create_nonce('amfm_maps_ajax_nonce')
-		));
-	}
+   public function enqueue_scripts()
+   {
+	   wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/amfm-maps-admin.js', array('jquery'), $this->version, false);
+	   wp_enqueue_script('jquery-ui-sortable');
+	   wp_enqueue_script('amfm-maps-admin-sortable', plugin_dir_url(__FILE__) . 'js/amfm-maps-admin-sortable.js', array('jquery', 'jquery-ui-sortable'), $this->version, false);
+	   // Localize script for AJAX
+	   wp_localize_script($this->plugin_name, 'amfmMapsAdmin', array(
+		   'ajax_url' => admin_url('admin-ajax.php'),
+		   'nonce' => wp_create_nonce('amfm_maps_ajax_nonce')
+	   ));
+   }
 
 	/**
 	 * Get stored JSON data
@@ -372,4 +374,401 @@ class Amfm_Maps_Admin
 			return array('success' => false, 'message' => __('Sync error: ', 'amfm-maps') . $e->getMessage());
 		}
 	}
+	
+	/**
+	 * Get available filter types from JSON data
+	 *
+	 * @return array Array of available filter types with their options
+	 */
+	public static function get_available_filters()
+	{
+		$json_data = self::get_json_data();
+		
+		if (empty($json_data)) {
+			return array();
+		}
+		
+	   // Dynamically detect all filter groups and options from JSON data
+	   $filters = array();
+	   $group_patterns = array(
+		   'location' => array('label' => __('Location', 'amfm-maps'), 'key' => 'State'),
+		   'gender' => array('label' => __('Gender', 'amfm-maps'), 'key' => 'Details: Gender'),
+	   );
+	   $dynamic_groups = array();
+	   // Scan all keys for dynamic groups (e.g., Conditions: X, Programs: Y, Accomodations: Z)
+	   foreach ($json_data as $row) {
+		   foreach ($row as $key => $value) {
+			   if (preg_match('/^([A-Za-z]+): (.+)$/', $key, $matches)) {
+				   $group = strtolower($matches[1]);
+				   $option = $matches[2];
+				   if (!isset($dynamic_groups[$group])) {
+					   $dynamic_groups[$group] = array();
+				   }
+				   if ($value == 1 && !in_array($option, $dynamic_groups[$group])) {
+					   $dynamic_groups[$group][] = $option;
+				   }
+			   }
+		   }
+	   }
+	   // Add static groups (location, gender)
+	   foreach ($group_patterns as $type => $info) {
+		   $options = array();
+		   foreach ($json_data as $row) {
+			   if (!empty($row[$info['key']])) {
+				   $val = $type === 'location' ? self::get_full_state_name($row[$info['key']]) : $row[$info['key']];
+				   if (!in_array($val, $options)) {
+					   $options[] = $val;
+				   }
+			   }
+		   }
+		   sort($options);
+		   $filters[$type] = array(
+			   'label' => $info['label'],
+			   'options' => array_map(function($opt) { return array('label' => $opt, 'value' => $opt); }, $options),
+			   'enabled' => false, // Disabled by default
+			   'order' => 0
+		   );
+	   }
+	   // Add dynamic groups
+	   $order = 1;
+	   foreach ($dynamic_groups as $group => $options) {
+		   // Normalize group name (e.g., accomodations -> accommodations)
+		   $group_key = $group;
+		   if ($group_key === 'accomodations') $group_key = 'accommodations';
+		   $filters[$group_key] = array(
+			   'label' => ucfirst($group_key),
+			   'options' => array_map(function($opt) { return array('label' => $opt, 'value' => $opt); }, $options),
+			   'enabled' => false, // Disabled by default
+			   'order' => $order++
+		   );
+	   }
+	   // Sort groups by order
+	   uasort($filters, function($a, $b) {
+		   return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+	   });
+	   return $filters;
+	}
+	
+	/**
+	 * Convert state abbreviation to full name
+	 *
+	 * @param string $abbreviation State abbreviation
+	 * @return string Full state name
+	 */
+	private static function get_full_state_name($abbreviation)
+	{
+		$states = array(
+			'AL' => 'Alabama',
+			'AK' => 'Alaska',
+			'AZ' => 'Arizona',
+			'AR' => 'Arkansas',
+			'CA' => 'California',
+			'CO' => 'Colorado',
+			'CT' => 'Connecticut',
+			'DE' => 'Delaware',
+			'FL' => 'Florida',
+			'GA' => 'Georgia',
+			'HI' => 'Hawaii',
+			'ID' => 'Idaho',
+			'IL' => 'Illinois',
+			'IN' => 'Indiana',
+			'IA' => 'Iowa',
+			'KS' => 'Kansas',
+			'KY' => 'Kentucky',
+			'LA' => 'Louisiana',
+			'ME' => 'Maine',
+			'MD' => 'Maryland',
+			'MA' => 'Massachusetts',
+			'MI' => 'Michigan',
+			'MN' => 'Minnesota',
+			'MS' => 'Mississippi',
+			'MO' => 'Missouri',
+			'MT' => 'Montana',
+			'NE' => 'Nebraska',
+			'NV' => 'Nevada',
+			'NH' => 'New Hampshire',
+			'NJ' => 'New Jersey',
+			'NM' => 'New Mexico',
+			'NY' => 'New York',
+			'NC' => 'North Carolina',
+			'ND' => 'North Dakota',
+			'OH' => 'Ohio',
+			'OK' => 'Oklahoma',
+			'OR' => 'Oregon',
+			'PA' => 'Pennsylvania',
+			'RI' => 'Rhode Island',
+			'SC' => 'South Carolina',
+			'SD' => 'South Dakota',
+			'TN' => 'Tennessee',
+			'TX' => 'Texas',
+			'UT' => 'Utah',
+			'VT' => 'Vermont',
+			'VA' => 'Virginia',
+			'WA' => 'Washington',
+			'WV' => 'West Virginia',
+			'WI' => 'Wisconsin',
+			'WY' => 'Wyoming'
+		);
+		
+		return isset($states[$abbreviation]) ? $states[$abbreviation] : $abbreviation;
+	}
+	
+	/**
+	 * Get filter configuration settings
+	 *
+	 * @return array Current filter configuration
+	 */
+   public static function get_filter_config()
+   {
+	   $available_filters = self::get_available_filters();
+	   $saved_config = get_option('amfm_maps_filter_config', array());
+	   $merged_config = array();
+	   $new_filter_detected = false;
+	   $order = 0;
+
+	   foreach ($available_filters as $type => $filter) {
+		   if (isset($saved_config[$type]) && is_array($saved_config[$type])) {
+			   // Merge saved config with detected options
+			   $merged = array_merge(
+				   $filter,
+				   $saved_config[$type]
+			   );
+			   // Merge options (preserve custom labels/order)
+			   if (isset($saved_config[$type]['options']) && is_array($saved_config[$type]['options'])) {
+				   // Map detected options to saved config (by value)
+				   $detected_options = array_column($filter['options'], 'value');
+				   $saved_options = $saved_config[$type]['options'];
+				   $merged_options = array();
+				   foreach ($saved_options as $opt) {
+					   if (in_array($opt['value'], $detected_options)) {
+						   $merged_options[] = $opt;
+					   }
+				   }
+				   // Add any new detected options (not in saved config)
+				   foreach ($filter['options'] as $opt) {
+					   if (!in_array($opt['value'], array_column($merged_options, 'value'))) {
+						   $merged_options[] = $opt;
+						   $new_filter_detected = true;
+					   }
+				   }
+				   $merged['options'] = $merged_options;
+			   }
+			   $merged_config[$type] = $merged;
+		   } else {
+			   $merged_config[$type] = $filter;
+			   $new_filter_detected = true;
+		   }
+		   $merged_config[$type]['order'] = $order++;
+	   }
+	   // Notify admin if new filter detected
+	   if ($new_filter_detected && is_admin() && !get_transient('amfm_maps_new_filter_notice')) {
+		   set_transient('amfm_maps_new_filter_notice', 1, 60*60); // 1 hour
+	   }
+
+	   return $merged_config;
+   }
+	
+	/**
+	 * Save filter configuration
+	 *
+	 * @param array $config Filter configuration
+	 * @return bool Success status
+	 */
+	public static function save_filter_config($config)
+	{
+		// Get current config for comparison
+		$current_config = get_option('amfm_maps_filter_config', array());
+		
+		// Use update_option which handles both insert and update
+		$result = update_option('amfm_maps_filter_config', $config);
+		
+		// If update_option returns false, it might mean the value didn't change
+		// In that case, check if the option exists and has our data
+		if (!$result) {
+			$saved_config = get_option('amfm_maps_filter_config');
+			if ($saved_config === $config) {
+				return true;
+			}
+		}
+		
+		// Verify the option was saved
+		$saved_config = get_option('amfm_maps_filter_config');
+		
+		return $result;
+	}
+	
+	/**
+	 * Get enabled filter types
+	 *
+	 * @return array Array of enabled filter types
+	 */
+	public static function get_enabled_filters()
+	{
+		$config = self::get_filter_config();
+		$enabled = array();
+		
+		foreach ($config as $type => $settings) {
+			if (!empty($settings['enabled'])) {
+				$enabled[] = $type;
+			}
+		}
+		
+		return $enabled;
+	}
+	
+	/**
+	 * Get filter options for a specific type
+	 *
+	 * @param string $filter_type Filter type (location, gender, conditions, programs, accommodations)
+	 * @return array Array of filter options
+	 */
+	public static function get_filter_options($filter_type)
+	{
+		$available_filters = self::get_available_filters();
+		$config = self::get_filter_config();
+		
+		if (!isset($available_filters[$filter_type]) || empty($config[$filter_type]['enabled'])) {
+			return array();
+		}
+		
+		$options = $available_filters[$filter_type]['options'];
+		$filter_config = $config[$filter_type];
+		
+		// Apply sorting
+		if ($filter_config['sort_order'] === 'desc') {
+			rsort($options);
+		} else {
+			sort($options);
+		}
+		
+		// Apply limit
+		if ($filter_config['limit'] > 0) {
+			$options = array_slice($options, 0, $filter_config['limit']);
+		}
+		
+		return $options;
+	}
+	
+	/**
+	 * AJAX handler for saving filter configuration
+	 */
+	public function ajax_save_filter_config()
+	{
+		// Log that the function was called
+		error_log('AMFM Maps: ajax_save_filter_config called at ' . date('Y-m-d H:i:s'));
+		
+		// Check if this is a POST request
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			error_log('AMFM Maps: Not a POST request');
+			wp_send_json_error(array('message' => 'Invalid request method'));
+			return;
+		}
+		
+		// Verify nonce
+		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'amfm_maps_ajax_nonce')) {
+			error_log('AMFM Maps: Security check failed');
+			wp_send_json_error(array('message' => __('Security check failed', 'amfm-maps')));
+			return;
+		}
+		
+		// Check user capabilities
+		if (!current_user_can('manage_options')) {
+			error_log('AMFM Maps: Insufficient permissions');
+			wp_send_json_error(array('message' => __('Insufficient permissions', 'amfm-maps')));
+			return;
+		}
+		
+		if (!isset($_POST['config'])) {
+			error_log('AMFM Maps: No config data received');
+			wp_send_json_error(array('message' => __('Invalid configuration data', 'amfm-maps')));
+			return;
+		}
+		
+		// Decode JSON configuration data
+		$config = json_decode(stripslashes($_POST['config']), true);
+		
+		if (!is_array($config)) {
+			error_log('AMFM Maps: Config is not an array after JSON decode');
+			error_log('AMFM Maps: Raw config data: ' . $_POST['config']);
+			wp_send_json_error(array('message' => __('Invalid configuration data format', 'amfm-maps')));
+			return;
+		}
+		
+		error_log('AMFM Maps: Decoded config: ' . print_r($config, true));
+		
+	   // Sanitize and validate configuration
+	   $sanitized_config = array();
+	   // Accept any filter type (dynamic)
+	   foreach ($config as $type => $type_config) {
+		   if (is_array($type_config)) {
+			   $sanitized_type = array(
+				   'enabled' => !empty($type_config['enabled']),
+				   'label' => isset($type_config['label']) ? sanitize_text_field($type_config['label']) : '',
+				   'limit' => isset($type_config['limit']) ? absint($type_config['limit']) : 0,
+				   'sort_order' => (isset($type_config['sort_order']) && in_array($type_config['sort_order'], array('asc', 'desc'))) ? $type_config['sort_order'] : 'asc',
+				   'order' => isset($type_config['order']) ? intval($type_config['order']) : 0
+			   );
+			   // Sanitize options (allow custom label and order)
+			   if (isset($type_config['options']) && is_array($type_config['options'])) {
+				   $sanitized_options = array();
+				   foreach ($type_config['options'] as $opt) {
+					   $sanitized_options[] = array(
+						   'label' => isset($opt['label']) ? sanitize_text_field($opt['label']) : '',
+						   'value' => isset($opt['value']) ? sanitize_text_field($opt['value']) : '',
+						   'order' => isset($opt['order']) ? intval($opt['order']) : 0
+					   );
+				   }
+				   $sanitized_type['options'] = $sanitized_options;
+			   }
+			   $sanitized_config[$type] = $sanitized_type;
+		   }
+	   }
+	   if (empty($sanitized_config)) {
+		   error_log('AMFM Maps: No valid configuration data after sanitization');
+		   wp_send_json_error(array('message' => __('No valid configuration data provided', 'amfm-maps')));
+		   return;
+	   }
+	   error_log('AMFM Maps: Sanitized config: ' . print_r($sanitized_config, true));
+	   $result = self::save_filter_config($sanitized_config);
+	   error_log('AMFM Maps: Save result: ' . ($result ? 'success' : 'failed'));
+	   if ($result) {
+		   wp_send_json_success(array('message' => __('Filter configuration saved successfully', 'amfm-maps')));
+	   } else {
+		   wp_send_json_error(array('message' => __('Failed to save filter configuration', 'amfm-maps')));
+	   }
+	}
+	
+	/**
+	 * AJAX handler for getting available filters
+	 */
+	public function ajax_get_available_filters()
+	{
+		// Verify nonce
+		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'amfm_maps_ajax_nonce')) {
+			wp_send_json_error(array('message' => __('Security check failed', 'amfm-maps')));
+			return;
+		}
+		
+		// Check user capabilities
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(array('message' => __('Insufficient permissions', 'amfm-maps')));
+			return;
+		}
+		
+		$available_filters = self::get_available_filters();
+		$filter_config = self::get_filter_config();
+		
+		// Merge available filters with current config
+		foreach ($available_filters as $type => $data) {
+			if (isset($filter_config[$type])) {
+				$available_filters[$type] = array_merge($data, $filter_config[$type]);
+			}
+		}
+		
+		wp_send_json_success($available_filters);
+	}
+
+	/**
+	 * Test AJAX handler
+	 */
 }

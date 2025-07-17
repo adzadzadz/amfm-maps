@@ -52,7 +52,6 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
 <div class="wrap amfm-maps-wrap">
     <div class="amfm-maps-header">
         <h1 class="amfm-maps-title">
-            <i class="dashicons dashicons-location-alt"></i>
             <?php echo esc_html(get_admin_page_title()); ?>
         </h1>
         <p class="amfm-maps-subtitle"><?php _e('Configure your Maps data source and synchronization settings', 'amfm-maps'); ?></p>
@@ -215,6 +214,53 @@ if (isset($_POST['manual_sync']) && wp_verify_nonce($_POST['amfm_maps_sync_nonce
                             </p>
                         <?php endif; ?>
                     </form>
+                </div>
+            </div>
+            
+            <!-- Filter Configuration -->
+            <div class="amfm-maps-panel" id="filter-configuration">
+                <div class="amfm-maps-panel-header">
+                    <h2 class="amfm-maps-panel-title">
+                        <i class="dashicons dashicons-filter"></i>
+                        <?php _e('Filter Configuration', 'amfm-maps'); ?>
+                    </h2>
+                    <p class="amfm-maps-panel-description"><?php _e('Configure which filter types are available and their settings', 'amfm-maps'); ?></p>
+                </div>
+                
+                <div class="amfm-maps-panel-body">
+                    <div id="amfm-filter-config">
+                        <div class="amfm-maps-loading" id="filter-loading">
+                            <i class="dashicons dashicons-update-alt"></i>
+                            <?php _e('Loading filter data...', 'amfm-maps'); ?>
+                        </div>
+                        
+                        <div id="filter-config-content" style="display: none;">
+                            <div class="amfm-maps-filter-notice">
+                                <p><?php _e('Configure filter types based on your JSON data. These settings will be used by the filter widgets.', 'amfm-maps'); ?></p>
+                            </div>
+                            
+                            <div id="filter-types-container">
+                                <!-- Filter types will be loaded here via AJAX -->
+                            </div>
+                            
+                            <div class="amfm-maps-form-actions">
+                                <button type="button" id="save-filter-config" class="amfm-maps-button amfm-maps-button-primary">
+                                    <i class="dashicons dashicons-yes"></i>
+                                    <?php _e('Save Filter Configuration', 'amfm-maps'); ?>
+                                </button>
+                                <button type="button" id="refresh-filter-data" class="amfm-maps-button amfm-maps-button-secondary">
+                                    <i class="dashicons dashicons-update"></i>
+                                    <?php _e('Refresh Data', 'amfm-maps'); ?>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="filter-no-data" style="display: none;">
+                            <div class="amfm-maps-notice amfm-maps-notice-warning">
+                                <p><?php _e('No JSON data available. Please sync your data first to configure filters.', 'amfm-maps'); ?></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

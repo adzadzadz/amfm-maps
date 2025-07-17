@@ -20,7 +20,7 @@
 
 /* Enhanced Drawer Styles */
 .amfm-drawer-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -38,46 +38,26 @@
 }
 
 .amfm-drawer {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    max-height: 70vh;
+    height: fit-content !important;
     background: white;
     z-index: 9999;
     transform: translateY(100%);
     transition: transform 0.3s ease;
-    border-radius: 20px 20px 0 0;
     box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
     overflow: hidden;
 }
 
 .amfm-drawer.open {
-    transform: translateY(0);
-}
-
-.amfm-drawer-close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 10;
-    color: #666;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(0) !important;
 }
 
 .amfm-drawer-content {
-    padding: 20px;
     max-height: calc(70vh - 40px);
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -97,14 +77,16 @@
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 8px;
+}
+
+.amfm-maps-single-photo {
+    width: 25%;
 }
 
 .amfm-maps-single-photo img {
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 8px;
 }
 
 /* Owl Carousel Navigation */
@@ -166,425 +148,198 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Info Content Styles */
 .amfm-map-info-content {
+    display: flex;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.amfm-website-button {
-    transition: background-color 0.3s ease, transform 0.2s ease;
+.amfm-drawer-action {
+    display: block;
+    background-color: #03B292;
+    color: #fff !important;
+    transition: background-color 0.3s ease, transform 0.2s ease !important;
+    padding: 10px 15px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 130px;
 }
 
-.amfm-website-button:hover {
-    background-color: #005a87 !important;
+.amfm-drawer-action:hover {
+    background-color: #026b5a !important;
     transform: translateY(-1px);
 }
 
 @media (min-width: 769px) {
-    .amfm-drawer {
-        display: none;
-    }
     .gm-style-iw.gm-style-iw-c {
         max-height: none !important;
         max-width: 400px !important;
         padding: 0 0 0 0 !important;
     }
+
     .gm-style-iw-chr {
         position: absolute !important;
         top: 0 !important;
         z-index: 99 !important;
         right: 0 !important;
     }
+
     .gm-style-iw-d {
         max-height: none !important;
         overflow: visible !important;
     }
-    
+
     /* Desktop popup photo slider */
     .gm-style-iw .amfm-maps-photo-slider {
         position: relative;
     }
-    
+
     .gm-style-iw .amfm-maps-photo-slide img {
         height: 180px;
     }
 }
-    /* Photos */
-    .amfm-maps-photo-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
 
-    .amfm-maps-photo-item {
-        flex: 1 1 calc(33.333% - 10px);
-        box-sizing: border-box;
-    }
-
-    .amfm-maps-photo-item img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-
-    /* Photo Slider */
-    .amfm-maps-photo-slider {
-        position: relative;
-        width: 100%;
-        /* max-width: 200px; */
-        /* Match the max width of the dialog box */
-        margin: 0 auto 15px;
-        /* Center the slider and add bottom margin */
-        overflow: hidden;
-        touch-action: pan-y;
-        /* Prevent vertical scrolling interference */
-    }
-
-    .amfm-maps-photo-slide {
-        position: relative;
-        /* Change from absolute to relative for Owl Carousel */
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        /* Ensure slides take the full height of the slider */
-        display: block;
-        /* Ensure slides are displayed */
-        transition: transform 0.5s ease-in-out;
-    }
-
-    .amfm-maps-photo-slide img {
-        width: 100%;
-        height: auto;
-        /* Remove height limitation */
-        object-fit: cover;
-        /* Ensure the image scales properly without distortion */
-        display: block;
-    }
-
-    .amfm-maps-photo-slider .owl-nav {
-        position: absolute;
-        top: 50%;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        transform: translateY(-50%);
-    }
-
-    .amfm-maps-photo-slider .owl-nav button {
-        background: rgba(0, 0, 0, 0.5);
-        color: rgba(255, 255, 255, 0.8) !important;
-        /* Change nav button color to white */
-        border: none;
-        padding: 5px 10px;
-        margin-left: 5px;
-        margin-right: 5px;
-        cursor: pointer;
-        font-size: 26px !important;
-    }
-
-    /* Adjust dots position */
-    .amfm-maps-photo-slider .owl-dots {
-        position: absolute;
-        /* Position dots inside the image */
-        bottom: 5px;
-        /* Add 5px margin before the edge */
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        width: 100%;
-        margin: 0;
-        /* Remove margin to keep dots inside */
-    }
-
-    .amfm-maps-photo-slider .owl-dot {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        margin: 0 5px;
-        background: #ccc !important;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    .amfm-maps-photo-slider .owl-dot.active {
-        background: #fff !important;
-    }
-
-
-    .amfm-maps-info-wrapper {
-        font-family: Arial, Helvetica, sans-serif;
-        padding: 16px 16px 24px;
-    }
-
-    .amfm-maps-info-wrapper .phone-number-wrapper {
-        display: inline;
-        margin-right: 5px;
-    }
-
-    .amfm-maps-info-wrapper .website-button-wrapper {
-        margin-top: 10px;
-        /* display: inline; */
-    }
-
-    /* Website button styles */
-    .amfm-website-button {
-        display: inline-block;
-        padding: 10px 15px;
-        background-color: rgb(0, 45, 107, 1);
-        /* Match the close button background color */
-        color: #fff !important;
-        /* White text color */
-        text-decoration: none;
-        /* Remove underline */
-        font-size: 14px;
-        font-weight: bold;
-        /* border-radius: 5px; */
-        text-align: center;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    .amfm-website-button:hover {
-        background-color: rgba(0, 45, 107, 0.8);
-        /* Slightly darker on hover */
-    }
+/* Photos */
+.amfm-maps-photo-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-/* Drawer styles for mobile full-screen mode */
-@media (max-width: 768px) {
+.amfm-maps-photo-item {
+    flex: 1 1 calc(33.333% - 10px);
+    box-sizing: border-box;
+}
 
-    /* Photos */
-    .amfm-maps-photo-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
+.amfm-maps-photo-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
 
-    .amfm-maps-photo-item {
-        flex: 1 1 calc(33.333% - 10px);
-        box-sizing: border-box;
-    }
+/* Photo Slider */
+.amfm-maps-photo-slider {
+    position: relative;
+    width: 100%;
+    /* max-width: 200px; */
+    /* Match the max width of the dialog box */
+    margin: 0 auto 15px;
+    /* Center the slider and add bottom margin */
+    overflow: hidden;
+    touch-action: pan-y;
+    /* Prevent vertical scrolling interference */
+}
 
-    .amfm-maps-photo-item img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
+.amfm-maps-photo-slide {
+    position: relative;
+    /* Change from absolute to relative for Owl Carousel */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Ensure slides take the full height of the slider */
+    display: block;
+    /* Ensure slides are displayed */
+    transition: transform 0.5s ease-in-out;
+}
 
-    /* Photo Slider */
-    .amfm-maps-photo-slider {
-        position: relative;
-        width: 100%;
-        max-width: 400px;
-        /* Match the max width of the dialog box */
-        margin: 0 auto 15px;
-        /* Center the slider and add bottom margin */
-        overflow: hidden;
-        touch-action: pan-y;
-        /* Prevent vertical scrolling interference */
-    }
+.amfm-maps-photo-slide img {
+    width: 100%;
+    height: auto;
+    /* Remove height limitation */
+    object-fit: cover;
+    /* Ensure the image scales properly without distortion */
+    display: block;
+}
 
-    .amfm-maps-photo-slide {
-        position: relative;
-        /* Change from absolute to relative for Owl Carousel */
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        /* Ensure slides take the full height of the slider */
-        display: block;
-        /* Ensure slides are displayed */
-        transition: transform 0.5s ease-in-out;
-    }
+.amfm-maps-photo-slider .owl-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+}
 
-    .amfm-maps-photo-slide img {
-        width: 100%;
-        height: auto;
-        /* Remove height limitation */
-        object-fit: cover;
-        /* Ensure the image scales properly without distortion */
-        display: block;
-    }
+.amfm-maps-photo-slider .owl-nav button {
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.8) !important;
+    /* Change nav button color to white */
+    border: none;
+    padding: 5px 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    cursor: pointer;
+    font-size: 26px !important;
+}
 
-    .amfm-maps-photo-slider .owl-nav {
-        position: absolute;
-        top: 50%;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        transform: translateY(-50%);
-    }
+/* Adjust dots position */
+.amfm-maps-photo-slider .owl-dots {
+    position: absolute;
+    /* Position dots inside the image */
+    bottom: 5px;
+    /* Add 5px margin before the edge */
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 100%;
+    margin: 0;
+    /* Remove margin to keep dots inside */
+}
 
-    .amfm-maps-photo-slider .owl-nav button {
-        background: rgba(0, 0, 0, 0.5);
-        color: rgba(255, 255, 255, 0.8) !important;
-        /* Change nav button color to white */
-        border: none;
-        padding: 5px 10px;
-        margin-left: 5px;
-        margin-right: 5px;
-        cursor: pointer;
-        font-size: 26px !important;
-    }
+.amfm-maps-photo-slider .owl-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background: #ccc !important;
+    border-radius: 50%;
+    cursor: pointer;
+}
 
-    /* Adjust dots position */
-    .amfm-maps-photo-slider .owl-dots {
-        position: absolute;
-        /* Position dots inside the image */
-        bottom: 5px;
-        /* Add 5px margin before the edge */
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        width: 100%;
-        margin: 0;
-        /* Remove margin to keep dots inside */
-    }
+.amfm-maps-photo-slider .owl-dot.active {
+    background: #fff !important;
+}
 
-    .amfm-maps-photo-slider .owl-dot {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        margin: 0 5px;
-        background: #ccc !important;
-        border-radius: 50%;
-        cursor: pointer;
-    }
+.amfm-maps-drawer-actions {
+    /* center vertically the contents of this class */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20%;
+    gap: 8px;
+    padding-right: 10px;
+}
 
-    .amfm-maps-photo-slider .owl-dot.active {
-        background: #fff !important;
-    }
+.amfm-maps-info-wrapper {
+    width: 55%;
+    padding: 15px 25px !important;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 16px 16px 24px;
+}
 
+.amfm-maps-info-wrapper .phone-number-wrapper {
+    display: inline;
+    margin-right: 5px;
+}
 
-    .amfm-maps-info-wrapper {
-        font-family: Arial, Helvetica, sans-serif;
-        padding: 16px 16px 24px;
-    }
-
-    /* Drawer overlay */
-    .amfm-drawer-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1;
-        display: none;
-        /* Ensure it is hidden by default */
-    }
-
-    .amfm-drawer-overlay.visible {
-        display: block;
-        /* Show overlay when "visible" class is added */
-    }
-
-    .amfm-maps-info-wrapper .website-button-wrapper {
-        margin-top: 10px;
-    }
-
-    /* Drawer styles */
-    .amfm-drawer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: #fff;
-        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        transform: translateY(100%);
-        /* Hide drawer by default */
-        transition: transform 0.3s ease-in-out;
-        padding: 0;
-        /* Remove padding from the drawer */
-    }
-
-    .amfm-drawer.open {
-        transform: translateY(0);
-        /* Slide drawer up when "open" class is added */
-    }
-
-    /* Drawer content */
-    .amfm-drawer-content {
-        padding: 20px;
-        /* Add padding only to the text content */
-    }
-
-    /* Drawer close button */
-    .amfm-drawer-close {
-        position: fixed;
-        /* Fix the close button in the upper-right corner */
-        top: 10px;
-        right: 10px;
-        background-color: rgb(0, 45, 107, 1) !important;
-        border: none;
-        font-size: 28px !important;
-        /* Increase the font size for a larger "x" */
-        color: #000;
-        /* Set the "x" color to black */
-        cursor: pointer;
-        z-index: 1100;
-        /* Ensure the close button is above the drawer */
-        padding: 6px 12px 3px !important;
-        line-height: 1em !important;
-    }
-
-    .amfm-drawer-content {
-        padding: 0;
-    }
-
-    /* Drawer image styles for mobile */
-    .amfm-maps-photo-slider {
-        position: relative;
-        width: 100%;
-        /* Fit the screen width */
-        max-width: 100%;
-        /* Ensure it doesn't exceed the screen width */
-        margin: 0;
-        /* Remove margin to make the image stick to the edge */
-        overflow: hidden;
-        touch-action: pan-y;
-        height: auto;
-        /* Allow height to adjust dynamically */
-    }
-
-    .amfm-maps-photo-slide img {
-        width: 100%;
-        /* Fit the screen width */
-        max-height: 250px;
-        /* Limit the height to 250px */
-        object-fit: cover;
-        /* Ensure the image scales properly without distortion */
-        display: block;
-    }
-
-    /* Website button styles */
-    .amfm-website-button {
-        display: inline-block;
-        padding: 10px 15px;
-        background-color: rgb(0, 45, 107, 1);
-        /* Match the close button background color */
-        color: #fff !important;
-        /* White text color */
-        text-decoration: none;
-        /* Remove underline */
-        font-size: 14px;
-        font-weight: bold;
-        /* border-radius: 5px; */
-        text-align: center;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    .amfm-website-button:hover {
-        background-color: rgba(0, 45, 107, 0.8);
-        /* Slightly darker on hover */
-    }
+.amfm-maps-info-wrapper .website-button-wrapper {
+    margin-top: 10px;
+    /* display: inline; */
 }
 
 /* Loading spinner styles */
@@ -612,8 +367,8 @@
     }
 }
 
-/* AMFM Map V2 Widget Styles */
-.amfm-map-v2-container {
+/* AMFM Map Widget Styles */
+.amfm-map-container {
     width: 100%;
     font-family: inherit;
 }
@@ -629,7 +384,7 @@
     color: #333;
 }
 
-.amfm-map-v2-content {
+.amfm-map-content {
     display: flex;
     gap: 20px;
     height: 100%;
@@ -638,7 +393,6 @@
 .amfm-filter-panel {
     background: #f8f9fa;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
     padding: 20px;
     overflow-y: auto;
 }
@@ -728,7 +482,6 @@
     position: relative;
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -740,9 +493,9 @@
     position: relative;
 }
 
-.amfm-map-wrapper > div {
-    width: 100% !important;
-    height: 100% !important;
+.amfm-map-wrapper>div {
+    /* width: 100% !important; */
+    /* height: 100% !important; */
 }
 
 .amfm-results-counter {
@@ -759,11 +512,11 @@
 }
 
 /* Loading state */
-.amfm-map-v2-container.loading .amfm-map-wrapper {
+.amfm-map-container.loading .amfm-map-wrapper {
     position: relative;
 }
 
-.amfm-map-v2-container.loading .amfm-map-wrapper::before {
+.amfm-map-container.loading .amfm-map-wrapper::before {
     content: "Loading map...";
     position: absolute;
     top: 50%;
@@ -834,9 +587,8 @@
 
 .amfm-layout-buttons .amfm-filter-buttons-container {
     width: 35%;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: none;
+    border: none;
     padding: 20px;
     overflow-y: auto;
     max-height: 600px;
@@ -846,7 +598,6 @@
     width: 65%;
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -906,7 +657,7 @@
     background: #e9ecef;
     border-color: #adb5bd;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .amfm-layout-buttons .amfm-filter-button.active {
@@ -938,19 +689,19 @@
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .amfm-layout-buttons .amfm-filter-buttons-container {
         width: 100%;
         max-height: 300px;
         order: 2;
     }
-    
+
     .amfm-layout-buttons .amfm-map-panel {
         width: 100%;
         order: 1;
         min-height: 400px;
     }
-    
+
     .amfm-layout-buttons .amfm-filter-group-title {
         margin-bottom: 8px;
     }
@@ -962,11 +713,11 @@
         font-size: 12px;
         margin: 2px 3px 2px 0;
     }
-    
+
     .amfm-layout-buttons .amfm-filter-buttons-wrapper {
         gap: 15px;
     }
-    
+
     .amfm-filter-buttons-header {
         flex-direction: column;
         align-items: stretch;
@@ -976,52 +727,52 @@
 
 /* General responsive styles */
 @media (max-width: 768px) {
-    .amfm-map-v2-content {
+    .amfm-map-content {
         flex-direction: column;
     }
-    
+
     .amfm-filter-panel,
     .amfm-map-panel {
         width: 100% !important;
     }
-    
+
     /* Standalone widget responsive styles */
     .amfm-filter-container.amfm-filter-only.amfm-layout-buttons .amfm-filter-buttons-container {
         padding: 15px;
     }
-    
+
     .amfm-filter-container.amfm-filter-only .amfm-filter-buttons-wrapper {
         gap: 10px;
     }
-    
+
     .amfm-filter-container.amfm-filter-only .amfm-filter-group-buttons {
         margin-bottom: 15px;
     }
-    
-    .amfm-map-v2-container.amfm-map-only .amfm-map-title h3 {
+
+    .amfm-map-container.amfm-map-only .amfm-map-title h3 {
         font-size: 20px;
     }
-    
+
     .amfm-filter-container.amfm-filter-only .amfm-filter-title h3 {
         font-size: 18px;
     }
 }
 
 @media (max-width: 480px) {
-    .amfm-map-v2-content {
+    .amfm-map-content {
         gap: 15px;
     }
-    
+
     .amfm-filter-panel {
         padding: 15px;
     }
-    
+
     .amfm-filter-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
     }
-    
+
     .amfm-clear-filters {
         align-self: flex-end;
     }
@@ -1032,11 +783,11 @@
     .amfm-layout-buttons .amfm-filter-buttons-container {
         width: 40%;
     }
-    
+
     .amfm-layout-buttons .amfm-map-panel {
         width: 60%;
     }
-    
+
     .amfm-layout-buttons .amfm-filter-button {
         font-size: 11px;
         padding: 5px 10px;
@@ -1048,21 +799,20 @@
     .amfm-layout-buttons .amfm-filter-buttons-container {
         width: 35%;
     }
-    
+
     .amfm-layout-buttons .amfm-map-panel {
         width: 65%;
     }
 }
 
 /* Standalone Widget Layouts */
-.amfm-map-v2-container.amfm-map-only {
+.amfm-map-container.amfm-map-only {
     width: 100%;
 }
 
-.amfm-map-v2-container.amfm-map-only .amfm-map-wrapper {
+.amfm-map-container.amfm-map-only .amfm-map-wrapper {
     width: 100%;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
     overflow: hidden;
     background: white;
 }
@@ -1073,9 +823,8 @@
 
 .amfm-filter-container.amfm-filter-only.amfm-layout-buttons .amfm-filter-buttons-container {
     width: 100%;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: none;
+    border: none;
     padding: 20px;
     max-height: none;
 }
@@ -1084,7 +833,6 @@
     width: 100%;
     background: #f8f9fa;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
     padding: 20px;
 }
 
@@ -1098,4 +846,3 @@
     font-weight: 600;
     color: #333;
 }
-

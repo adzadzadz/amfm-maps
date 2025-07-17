@@ -9,16 +9,16 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-class MapV2Widget extends Widget_Base
+class MapWidget extends Widget_Base
 {
     public function get_name()
     {
-        return 'amfm_map_v2_widget';
+        return 'amfm_map_widget';
     }
 
     public function get_title()
     {
-        return __('AMFM Map V2', 'amfm-maps');
+        return __('AMFM Map', 'amfm-maps');
     }
 
     public function get_icon()
@@ -174,7 +174,7 @@ class MapV2Widget extends Widget_Base
         
         // Use Elementor's widget ID for consistent targeting
         $widget_id = $this->get_id();
-        $unique_id = 'amfm_map_v2_' . $widget_id;
+        $unique_id = 'amfm_map_' . $widget_id;
         
         // Get JSON data
         $json_data = [];
@@ -185,7 +185,7 @@ class MapV2Widget extends Widget_Base
         }
         
         ?>
-        <div class="amfm-map-v2-container amfm-map-only" 
+        <div class="amfm-map-container amfm-map-only" 
              id="<?php echo esc_attr($unique_id); ?>">
             
             <?php if (!empty($settings['map_title'])): ?>
@@ -202,31 +202,25 @@ class MapV2Widget extends Widget_Base
                     </div>
                 <?php endif; ?>
             </div>
-            
-            <div class="amfm-results-counter">
-                <span id="<?php echo esc_attr($unique_id); ?>_counter">
-                    <?php echo sprintf(__('Showing %d locations', 'amfm-maps'), count($json_data)); ?>
-                </span>
-            </div>
         </div>
 
         <script>
             jQuery(document).ready(function($) {
-                console.log('AMFM Map V2 Widget initializing for:', "<?php echo esc_js($unique_id); ?>");
+                console.log('AMFM Map Widget initializing for:', "<?php echo esc_js($unique_id); ?>");
                 console.log('JSON Data count:', <?php echo count($json_data); ?>);
                 
                 // Ensure Google Maps API is loaded first
-                function initializeMapV2() {
-                    if (typeof amfmMapV2 !== 'undefined' && typeof google !== 'undefined' && google.maps) {
-                        console.log('Initializing AMFM Map V2...');
-                        amfmMapV2.init({
+                function initializeMap() {
+                    if (typeof amfmMap !== 'undefined' && typeof google !== 'undefined' && google.maps) {
+                        console.log('Initializing AMFM Map...');
+                        amfmMap.init({
                             unique_id: "<?php echo esc_js($unique_id); ?>",
                             json_data: <?php echo json_encode($json_data); ?>,
                             api_key: "<?php echo esc_js(AMFM_MAPS_API_KEY); ?>"
                         });
                     } else {
                         console.log('Waiting for dependencies...', {
-                            amfmMapV2: typeof amfmMapV2,
+                            amfmMap: typeof amfmMap,
                             google: typeof google,
                             googleMaps: typeof google !== 'undefined' ? typeof google.maps : 'undefined'
                         });
@@ -236,12 +230,11 @@ class MapV2Widget extends Widget_Base
                 }
                 
                 // Start initialization
-                $(window).on("load", function() {
-                    setTimeout(initializeMapV2, 100);
+                $(window).on("load", function() {                        setTimeout(initializeMap, 100);
                 });
                 
                 // Also try on document ready as fallback
-                initializeMapV2();
+                initializeMap();
             });
         </script>
         

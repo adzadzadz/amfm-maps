@@ -8,6 +8,7 @@
 
 	$(document).ready(function() {
 		console.log('AMFM Maps admin script loaded');
+		console.log('amfmMapsAdmin object:', amfmMapsAdmin);
 		
 		// Hide WordPress footer on this admin page
 		$('#wpfooter').hide();
@@ -21,6 +22,7 @@
 		initializeTooltips();
 		initializeAnimations();
 		initializeTabs();
+		initializeFilterConfiguration();
 		
 		// Initialize data table if we're on the data view tab
 		if ($('#tab-data-view').hasClass('active')) {
@@ -544,6 +546,251 @@
 		
 		$('head').append(spinCSS);
 	});
+	
+	/**
+	 * Initialize filter configuration functionality
+	 */
+	function initializeFilterConfiguration() {
+		// Load filter data on page load
+		loadFilterData();
+		
+		// Handle save filter configuration
+		$('#save-filter-config').on('click', saveFilterConfiguration);
+		
+		// Handle refresh filter data
+		$('#refresh-filter-data').on('click', loadFilterData);
+		
+		// Handle filter type enable/disable
+		$(document).on('change', '.filter-type-enabled', function() {
+			const filterType = $(this).data('filter-type');
+			const isEnabled = $(this).is(':checked');
+			const settingsRow = $(this).closest('.filter-type-item').find('.filter-type-settings');
+			
+			settingsRow.toggle(isEnabled);
+		});
+	}
+	
+	/**
+	 * Load filter data from server
+	 */
+	function loadFilterData() {
+		const $loading = $('#filter-loading');
+		const $content = $('#filter-config-content');
+		const $noData = $('#filter-no-data');
+		
+		// Show loading
+		$loading.show();
+		$content.hide();
+		$noData.hide();
+		
+		$.ajax({
+			url: amfmMapsAdmin.ajax_url,
+			type: 'POST',
+			data: {
+				action: 'amfm_maps_get_available_filters',
+				nonce: amfmMapsAdmin.nonce
+			},
+			success: function(response) {
+				if (response.success) {
+					const filterData = response.data;
+					if (Object.keys(filterData).length > 0) {
+						renderFilterConfiguration(filterData);
+						$content.show();
+					} else {
+						$noData.show();
+					}
+				} else {
+					showNotification('Failed to load filter data: ' + (response.data.message || 'Unknown error'), 'error');
+					$noData.show();
+				}
+			},
+			error: function(xhr, status, error) {
+				showNotification('Failed to load filter data: Network error', 'error');
+				console.error('AJAX Error:', status, error);
+				$noData.show();
+			},
+			complete: function() {
+				$loading.hide();
+			}
+		});
+	}
+	
+	/**
+	 * Render filter configuration UI
+	 */
+	function renderFilterConfiguration(filterData) {
+		const $container = $('#filter-types-container');
+		let html = '';
+		
+		const filterTypes = {
+			'location': 'Location',
+			'gender': 'Gender',
+			'conditions': 'Conditions',
+			'programs': 'Programs',
+			'accommodations': 'Accommodations'
+		};
+		
+	   $.each(filterTypes, function(type, defaultLabel) {
+		   const data = filterData[type] || {};
+		   const options = data.options || [];
+		   const enabled = data.enabled !== false;
+		   const label = data.label || defaultLabel;
+		   const limit = data.limit || 0;
+		   const sortOrder = data.sort_order || 'asc';
+		   // Option order and custom labels
+		   let optionsHtml = '';
+		   options.forEach(function(option, i) {
+			   const optLabel = typeof option === 'object' ? (option.label || option.value || option) : option;
+			   const optValue = typeof option === 'object' ? (option.value || option.label || option) : option;
+			   optionsHtml += `<div class="option-tag" data-value="${optValue}" data-order="${option.order || i}">
+				   <input type="text" class="option-label-input" value="${optLabel}" placeholder="${optValue}">
+				   <span class="option-move-handle dashicons dashicons-move"></span>
+			   </div>`;
+		   });
+		   html += `
+			   <div class="filter-type-item" data-filter-type="${type}">
+				   <div class="filter-type-header">
+					   <label class="filter-type-title">
+						   <input type="checkbox" class="filter-type-enabled" data-filter-type="${type}" ${enabled ? 'checked' : ''}>
+						   <strong>${defaultLabel}</strong>
+						   <span class="filter-type-count">(${options.length} options)</span>
+					   </label>
+				   </div>
+				   <div class="filter-type-settings" style="display: ${enabled ? 'block' : 'none'};">
+					   <div class="filter-setting-row">
+						   <label>
+							   <span class="setting-label">Display Label:</span>
+							   <input type="text" class="filter-label" value="${label}" placeholder="${defaultLabel}">
+						   </label>
+					   </div>
+					   <div class="filter-setting-row">
+						   <label>
+							   <span class="setting-label">Limit (0 = no limit):</span>
+							   <input type="number" class="filter-limit" value="${limit}" min="0" max="100">
+						   </label>
+					   </div>
+					   <div class="filter-setting-row">
+						   <label>
+							   <span class="setting-label">Sort Order:</span>
+							   <select class="filter-sort-order">
+								   <option value="asc" ${sortOrder === 'asc' ? 'selected' : ''}>Ascending</option>
+								   <option value="desc" ${sortOrder === 'desc' ? 'selected' : ''}>Descending</option>
+							   </select>
+						   </label>
+					   </div>
+					   <div class="filter-options-preview">
+						   <strong>Available Options:</strong>
+						   <div class="options-list">
+							   ${optionsHtml}
+						   </div>
+					   </div>
+				   </div>
+			   </div>
+		   `;
+	   });
+		
+		$container.html(html);
+	}
+	
+	/**
+	 * Save filter configuration
+	 */
+	function saveFilterConfiguration() {
+		const $button = $('#save-filter-config');
+		const originalText = $button.html();
+		
+		console.log('saveFilterConfiguration called');
+		
+		// Check if required objects exist
+		if (typeof amfmMapsAdmin === 'undefined') {
+			console.error('amfmMapsAdmin is undefined');
+			showNotification('Configuration error: amfmMapsAdmin not found', 'error');
+			return;
+		}
+		
+		if (!amfmMapsAdmin.ajax_url) {
+			console.error('AJAX URL not found in amfmMapsAdmin');
+			showNotification('Configuration error: AJAX URL not found', 'error');
+			return;
+		}
+		
+		if (!amfmMapsAdmin.nonce) {
+			console.error('Nonce not found in amfmMapsAdmin');
+			showNotification('Configuration error: Nonce not found', 'error');
+			return;
+		}
+		
+		// Collect configuration data
+		const config = {};
+		
+	   $('.filter-type-item').each(function(i) {
+		   const $item = $(this);
+		   const filterType = $item.data('filter-type');
+		   const enabled = $item.find('.filter-type-enabled').is(':checked');
+		   const label = $item.find('.filter-label').val() || '';
+		   const limit = parseInt($item.find('.filter-limit').val()) || 0;
+		   const sortOrder = $item.find('.filter-sort-order').val() || 'asc';
+		   const order = parseInt($item.attr('data-order')) || i;
+		   // Collect options with custom label and order
+		   const options = [];
+		   $item.find('.options-list .option-tag').each(function(j) {
+			   const $opt = $(this);
+			   const optValue = $opt.data('value');
+			   const optLabel = $opt.find('.option-label-input').val() || optValue;
+			   const optOrder = parseInt($opt.attr('data-order')) || j;
+			   options.push({ label: optLabel, value: optValue, order: optOrder });
+		   });
+		   config[filterType] = {
+			   enabled: enabled,
+			   label: label,
+			   limit: limit,
+			   sort_order: sortOrder,
+			   order: order,
+			   options: options
+		   };
+	   });
+		
+		console.log('Saving filter configuration:', config);
+		
+		// Show loading state
+		$button.prop('disabled', true);
+		$button.html('<i class="dashicons dashicons-update spin"></i> Saving...');
+		
+		// Save configuration
+		console.log('Sending AJAX request with data:', {
+			action: 'amfm_maps_save_filter_config',
+			nonce: amfmMapsAdmin.nonce,
+			config: JSON.stringify(config)
+		});
+		
+		$.ajax({
+			url: amfmMapsAdmin.ajax_url,
+			type: 'POST',
+			data: {
+				action: 'amfm_maps_save_filter_config',
+				nonce: amfmMapsAdmin.nonce,
+				config: JSON.stringify(config)
+			},
+			success: function(response) {
+				console.log('Save response:', response);
+				if (response.success) {
+					showNotification('Filter configuration saved successfully!', 'success');
+				} else {
+					showNotification('Failed to save configuration: ' + (response.data && response.data.message ? response.data.message : 'Unknown error'), 'error');
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('AJAX Error:', xhr.responseText, status, error);
+				console.error('XHR object:', xhr);
+				showNotification('Failed to save configuration: Network error', 'error');
+			},
+			complete: function() {
+				// Restore button state
+				$button.prop('disabled', false);
+				$button.html(originalText);
+			}
+		});
+	}
 	
 	// Make functions globally available
 	window.switchTab = switchTab;
