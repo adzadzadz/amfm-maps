@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 declare global {
     interface Window {
-        amfmMapV2: any;
+        amfmMap: any;
         testDebugInfo: any;
     }
 }
@@ -14,14 +14,14 @@ test.describe('Direct Filter Fix and Test', () => {
         await page.goto('http://localhost:10003/map-test/');
         
         // Wait for map container
-        await page.waitForSelector('#amfm_map_v2_8f74753', { timeout: 30000 });
-        await page.waitForFunction(() => window.amfmMapV2, { timeout: 30000 });
+        await page.waitForSelector('#amfm_map_8f74753', { timeout: 30000 });
+        await page.waitForFunction(() => window.amfmMap, { timeout: 30000 });
         
         console.log('Directly implementing missing setupFilterListeners functionality...');
         
         // Manually implement the missing setupFilterListeners functionality
         const setupResult = await page.evaluate(() => {
-            const mapId = 'amfm_map_v2_8f74753';
+            const mapId = 'amfm_map_8f74753';
             const container = document.getElementById(mapId);
             
             if (!container) {
@@ -29,18 +29,18 @@ test.describe('Direct Filter Fix and Test', () => {
             }
             
             // Check if loadLocations exists
-            const hasLoadLocations = !!(window.amfmMapV2?.loadLocations?.[mapId]);
+            const hasLoadLocations = !!(window.amfmMap?.loadLocations?.[mapId]);
             
             if (!hasLoadLocations) {
                 // Need to setup loadLocations function first
                 console.log('⚠️ Setting up missing loadLocations function...');
                 
-                const settings = window.amfmMapV2?.instances?.[mapId];
+                const settings = window.amfmMap?.instances?.[mapId];
                 if (!settings) {
                     return { error: 'Settings not found' };
                 }
                 
-                const map = window.amfmMapV2?.maps?.[mapId];
+                const map = window.amfmMap?.maps?.[mapId];
                 if (!map) {
                     return { error: 'Map instance not found' };
                 }
@@ -50,9 +50,9 @@ test.describe('Direct Filter Fix and Test', () => {
                     console.log('🔄 Loading', locations.length, 'locations...');
                     
                     // Clear existing markers
-                    const existingMarkers = window.amfmMapV2.markers[mapId] || [];
+                    const existingMarkers = window.amfmMap.markers[mapId] || [];
                     existingMarkers.forEach(marker => marker.setMap(null));
-                    window.amfmMapV2.markers[mapId] = [];
+                    window.amfmMap.markers[mapId] = [];
                     
                     // Create new markers
                     locations.forEach((location, index) => {
@@ -63,8 +63,8 @@ test.describe('Direct Filter Fix and Test', () => {
                                 title: location['Facility Name'] || 'Location'
                             });
                             
-                            window.amfmMapV2.markers[mapId].push(marker);
-                            console.log('📍 Marker created for:', location['Facility Name'], 'Total markers:', window.amfmMapV2.markers[mapId].length);
+                            window.amfmMap.markers[mapId].push(marker);
+                            console.log('📍 Marker created for:', location['Facility Name'], 'Total markers:', window.amfmMap.markers[mapId].length);
                         }
                     });
                     
@@ -76,10 +76,10 @@ test.describe('Direct Filter Fix and Test', () => {
                 };
                 
                 // Store loadLocations in registry
-                if (!window.amfmMapV2.loadLocations) {
-                    window.amfmMapV2.loadLocations = {};
+                if (!window.amfmMap.loadLocations) {
+                    window.amfmMap.loadLocations = {};
                 }
-                window.amfmMapV2.loadLocations[mapId] = loadLocations;
+                window.amfmMap.loadLocations[mapId] = loadLocations;
                 
                 // Load initial data
                 const jsonData = settings.json_data;
@@ -103,7 +103,7 @@ test.describe('Direct Filter Fix and Test', () => {
                 console.log('🎯 Received filter update:', event.detail);
                 
                 const filters = event.detail.filters;
-                const settings = window.amfmMapV2?.instances?.[mapId];
+                const settings = window.amfmMap?.instances?.[mapId];
                 if (!settings) return;
                 
                 let filteredData = settings.json_data.filter((location: any) => location.PlaceID);
@@ -137,7 +137,7 @@ test.describe('Direct Filter Fix and Test', () => {
                 console.log('🔍 Filtered to', filteredData.length, 'locations');
                 
                 // Load filtered results
-                const loadLocations = window.amfmMapV2.loadLocations[mapId];
+                const loadLocations = window.amfmMap.loadLocations[mapId];
                 if (loadLocations) {
                     loadLocations(filteredData);
                 }
@@ -151,9 +151,9 @@ test.describe('Direct Filter Fix and Test', () => {
             
             return { 
                 success: true, 
-                hasLoadLocations: !!(window.amfmMapV2?.loadLocations?.[mapId]),
+                hasLoadLocations: !!(window.amfmMap?.loadLocations?.[mapId]),
                 hasEventListener: true,
-                markerCount: window.amfmMapV2?.markers?.[mapId]?.length || 0
+                markerCount: window.amfmMap?.markers?.[mapId]?.length || 0
             };
         });
         
@@ -182,7 +182,7 @@ test.describe('Direct Filter Fix and Test', () => {
                 console.log('Testing California filter...');
                 
                 // Get initial count
-                const initialCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+                const initialCount = await page.locator('#amfm_map_8f74753_counter').textContent();
                 console.log('Initial count:', initialCount);
                 
                 // Click California filter
@@ -190,7 +190,7 @@ test.describe('Direct Filter Fix and Test', () => {
                 await page.waitForTimeout(2000);
                 
                 // Get updated count
-                const updatedCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+                const updatedCount = await page.locator('#amfm_map_8f74753_counter').textContent();
                 console.log('Updated count after California filter:', updatedCount);
                 
                 const filterWorked = updatedCount !== initialCount;
@@ -205,7 +205,7 @@ test.describe('Direct Filter Fix and Test', () => {
                         await clearButton.click();
                         await page.waitForTimeout(1000);
                         
-                        const clearedCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+                        const clearedCount = await page.locator('#amfm_map_8f74753_counter').textContent();
                         console.log('Count after clearing:', clearedCount);
                     }
                 } else {
@@ -215,7 +215,7 @@ test.describe('Direct Filter Fix and Test', () => {
                     const debugInfo = await page.evaluate(() => {
                         return {
                             buttonActive: document.querySelector('[data-filter-type="location"]')?.classList.contains('active'),
-                            markerCount: window.amfmMapV2?.markers?.['amfm_map_v2_8f74753']?.length || 0
+                            markerCount: window.amfmMap?.markers?.['amfm_map_8f74753']?.length || 0
                         };
                     });
                     console.log('Debug info:', debugInfo);

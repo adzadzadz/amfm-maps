@@ -3,7 +3,7 @@ import { WordPressHelper } from './utils/wordpress-helper';
 
 declare global {
     interface Window {
-        amfmMapV2: any;
+        amfmMap: any;
         testLogs: any[];
         setupFilterListenersCalled: boolean;
         eventListenerSetupLogs: any[];
@@ -22,8 +22,8 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
         await page.goto('http://localhost:10003/map-test/');
         
         // Wait for initial map load
-        await page.waitForSelector('#amfm_map_v2_8f74753', { timeout: 30000 });
-        await page.waitForFunction(() => window.amfmMapV2 && window.amfmMapV2.markers, { timeout: 30000 });
+        await page.waitForSelector('#amfm_map_8f74753', { timeout: 30000 });
+        await page.waitForFunction(() => window.amfmMap && window.amfmMap.markers, { timeout: 30000 });
     });
 
     test('comprehensive filter testing for all categories', async ({ page }) => {
@@ -31,15 +31,15 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
         
         // Wait for map to be fully loaded (adjust expected count based on actual data)
         await page.waitForFunction(() => {
-            return window.amfmMapV2 && 
-                   window.amfmMapV2.markers && 
-                   Object.keys(window.amfmMapV2.markers).length > 0 &&
-                   window.amfmMapV2.markers[Object.keys(window.amfmMapV2.markers)[0]] &&
-                   window.amfmMapV2.markers[Object.keys(window.amfmMapV2.markers)[0]].length >= 15; // Adjusted to actual count
+            return window.amfmMap && 
+                   window.amfmMap.markers && 
+                   Object.keys(window.amfmMap.markers).length > 0 &&
+                   window.amfmMap.markers[Object.keys(window.amfmMap.markers)[0]] &&
+                   window.amfmMap.markers[Object.keys(window.amfmMap.markers)[0]].length >= 15; // Adjusted to actual count
         }, { timeout: 30000 });
 
         // Get initial count
-        const initialCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+        const initialCount = await page.locator('#amfm_map_8f74753_counter').textContent();
         console.log('Initial marker count:', initialCount);
 
         // Test each filter category
@@ -81,7 +81,7 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
                 console.log(`Button active state: ${isActive}`);
                 
                 // Get updated count
-                const updatedCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+                const updatedCount = await page.locator('#amfm_map_8f74753_counter').textContent();
                 console.log(`Count after ${category.name} filter: ${updatedCount}`);
                 
                 // Check if count changed
@@ -118,16 +118,16 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
         console.log('\n--- DIAGNOSTIC INFORMATION ---');
         
         const diagnostics = await page.evaluate(() => {
-            const container = document.getElementById('amfm_map_v2_8f74753');
+            const container = document.getElementById('amfm_map_8f74753');
             const hasEventListener = container && (container as any)._events && (container as any)._events.amfmFilterUpdate;
             
             return {
                 containerExists: !!container,
                 containerClasses: container ? Array.from(container.classList) : [],
                 hasEventListener: !!hasEventListener,
-                amfmMapV2Keys: window.amfmMapV2 ? Object.keys(window.amfmMapV2) : [],
-                instancesKeys: window.amfmMapV2 && window.amfmMapV2.instances ? Object.keys(window.amfmMapV2.instances) : [],
-                markersKeys: window.amfmMapV2 && window.amfmMapV2.markers ? Object.keys(window.amfmMapV2.markers) : []
+                amfmMapKeys: window.amfmMap ? Object.keys(window.amfmMap) : [],
+                instancesKeys: window.amfmMap && window.amfmMap.instances ? Object.keys(window.amfmMap.instances) : [],
+                markersKeys: window.amfmMap && window.amfmMap.markers ? Object.keys(window.amfmMap.markers) : []
             };
         });
         
@@ -144,15 +144,15 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
         console.log('=== TESTING DIRECT EVENT DISPATCH ===');
         
         // Wait for map to load
-        await page.waitForFunction(() => window.amfmMapV2 && window.amfmMapV2.markers, { timeout: 30000 });
+        await page.waitForFunction(() => window.amfmMap && window.amfmMap.markers, { timeout: 30000 });
         
         // Get initial count
-        const initialCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+        const initialCount = await page.locator('#amfm_map_8f74753_counter').textContent();
         console.log('Initial count:', initialCount);
         
         // Manually dispatch filter event
         const result = await page.evaluate(() => {
-            const container = document.getElementById('amfm_map_v2_8f74753');
+            const container = document.getElementById('amfm_map_8f74753');
             if (!container) {
                 return { error: 'Container not found' };
             }
@@ -180,7 +180,7 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
         
         // Wait and check count
         await page.waitForTimeout(2000);
-        const updatedCount = await page.locator('#amfm_map_v2_8f74753_counter').textContent();
+        const updatedCount = await page.locator('#amfm_map_8f74753_counter').textContent();
         console.log('Count after direct dispatch:', updatedCount);
         
         const changed = updatedCount !== initialCount;
@@ -213,8 +213,8 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
         await page.goto('http://localhost:10003/map-test/');
         
         // Wait for everything to load
-        await page.waitForSelector('#amfm_map_v2_8f74753', { timeout: 30000 });
-        await page.waitForFunction(() => window.amfmMapV2, { timeout: 30000 });
+        await page.waitForSelector('#amfm_map_8f74753', { timeout: 30000 });
+        await page.waitForFunction(() => window.amfmMap, { timeout: 30000 });
         await page.waitForTimeout(5000); // Give extra time for setup
         
         // Check setup logs
@@ -222,8 +222,8 @@ test.describe('AMFM Filter Comprehensive Tests', () => {
             return {
                 setupCalled: window.setupFilterListenersCalled,
                 eventListenerLogs: window.eventListenerSetupLogs,
-                containerExists: !!document.getElementById('amfm_map_v2_8f74753'),
-                amfmMapV2Exists: !!window.amfmMapV2
+                containerExists: !!document.getElementById('amfm_map_8f74753'),
+                amfmMapExists: !!window.amfmMap
             };
         });
         

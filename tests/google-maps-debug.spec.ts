@@ -3,7 +3,7 @@ import { WordPressHelper } from './utils/wordpress-helper';
 
 declare global {
     interface Window {
-        amfmMapV2: any;
+        amfmMap: any;
         testLogs: any[];
         setupFilterListenersCalled: boolean;
         eventListenerSetupLogs: any[];
@@ -26,21 +26,21 @@ test.describe('AMFM Filter Debug - Google Maps Idle Event', () => {
         console.log('=== DEBUGGING GOOGLE MAPS IDLE EVENT ===');
         
         // Wait for initial map load
-        await page.waitForSelector('#amfm_map_v2_8f74753', { timeout: 30000 });
+        await page.waitForSelector('#amfm_map_8f74753', { timeout: 30000 });
         
         // Wait for map to be initialized
-        await page.waitForFunction(() => window.amfmMapV2 && window.amfmMapV2.maps, { timeout: 30000 });
+        await page.waitForFunction(() => window.amfmMap && window.amfmMap.maps, { timeout: 30000 });
         
-        console.log('Map container and amfmMapV2 loaded');
+        console.log('Map container and amfmMap loaded');
         
         // Check if map is initialized
         const mapStatus = await page.evaluate(() => {
-            const mapId = 'amfm_map_v2_8f74753';
-            const mapInstance = window.amfmMapV2 && window.amfmMapV2.maps && window.amfmMapV2.maps[mapId];
+            const mapId = 'amfm_map_8f74753';
+            const mapInstance = window.amfmMap && window.amfmMap.maps && window.amfmMap.maps[mapId];
             
             return {
-                amfmMapV2Exists: !!window.amfmMapV2,
-                mapsRegistryExists: !!window.amfmMapV2?.maps,
+                amfmMapExists: !!window.amfmMap,
+                mapsRegistryExists: !!window.amfmMap?.maps,
                 mapInstanceExists: !!mapInstance,
                 mapInstanceType: typeof mapInstance,
                 googleMapsExists: !!(window as any).google?.maps,
@@ -52,8 +52,8 @@ test.describe('AMFM Filter Debug - Google Maps Idle Event', () => {
         
         // Add manual idle event listener to debug
         const idleEventResult = await page.evaluate(() => {
-            const mapId = 'amfm_map_v2_8f74753';
-            const mapInstance = window.amfmMapV2?.maps?.[mapId];
+            const mapId = 'amfm_map_8f74753';
+            const mapInstance = window.amfmMap?.maps?.[mapId];
             
             if (!mapInstance) {
                 return { error: 'Map instance not found' };
@@ -98,10 +98,10 @@ test.describe('AMFM Filter Debug - Google Maps Idle Event', () => {
         console.log('Attempting to manually call the callback that should be in idle event...');
         
         const manualCallResult = await page.evaluate(() => {
-            const mapId = 'amfm_map_v2_8f74753';
+            const mapId = 'amfm_map_8f74753';
             
-            // Find the amfmMapV2.init settings for this map
-            const settings = window.amfmMapV2?.instances?.[mapId];
+            // Find the amfmMap.init settings for this map
+            const settings = window.amfmMap?.instances?.[mapId];
             if (!settings) {
                 return { error: 'Settings not found for map', mapId };
             }
@@ -126,11 +126,11 @@ test.describe('AMFM Filter Debug - Google Maps Idle Event', () => {
         
         // Final status check
         const finalStatus = await page.evaluate(() => {
-            const container = document.getElementById('amfm_map_v2_8f74753');
+            const container = document.getElementById('amfm_map_8f74753');
             return {
                 containerExists: !!container,
                 hasEventListener: !!(container as any)?._events?.amfmFilterUpdate,
-                markersLoaded: window.amfmMapV2?.markers?.['amfm_map_v2_8f74753']?.length || 0
+                markersLoaded: window.amfmMap?.markers?.['amfm_map_8f74753']?.length || 0
             };
         });
         

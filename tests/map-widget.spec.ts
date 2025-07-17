@@ -33,7 +33,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     // Wait for widgets to initialize
     await page.waitForSelector('.amfm-filter-container', { timeout: 15000 });
-    await page.waitForSelector('.amfm-map-v2-container', { timeout: 15000 });
+    await page.waitForSelector('.amfm-map-container', { timeout: 15000 });
     
     console.log('Triggering initial page interaction to activate maps...');
     
@@ -55,41 +55,41 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     const pageInfo = await page.evaluate(() => {
       return {
         hasGoogleMaps: typeof window.google !== 'undefined',
-        hasAMFMMapV2: typeof window.amfmMapV2 !== 'undefined',
+        hasAMFMMap: typeof window.amfmMap !== 'undefined',
         scriptsWithAMFM: Array.from(document.querySelectorAll('script')).filter(s => 
           s.src?.includes('amfm') || s.textContent?.includes('amfm')
         ).map(s => s.src || 'inline script'),
         windowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('amfm')),
-        hasMapContainer: !!document.querySelector('.amfm-map-v2-container'),
+        hasMapContainer: !!document.querySelector('.amfm-map-container'),
         hasFilterContainer: !!document.querySelector('.amfm-filter-container')
       };
     });
     
     console.log('Page diagnostic info:', pageInfo);
     
-    // If amfmMapV2 doesn't exist, wait a bit more and try to trigger it
-    if (!pageInfo.hasAMFMMapV2) {
-      console.log('amfmMapV2 not found, trying to trigger map initialization...');
+    // If amfmMap doesn't exist, wait a bit more and try to trigger it
+    if (!pageInfo.hasAMFMMap) {
+      console.log('amfmMap not found, trying to trigger map initialization...');
       
       // Try clicking on the map container to trigger initialization
-      await page.click('.amfm-map-v2-container', { force: true }).catch(() => {
+      await page.click('.amfm-map-container', { force: true }).catch(() => {
         console.log('Could not click map container');
       });
       
       await page.waitForTimeout(2000);
     }
     
-    // First wait for amfmMapV2 to exist
+    // First wait for amfmMap to exist
     await page.waitForFunction(() => {
-      return typeof window.amfmMapV2 !== 'undefined';
+      return typeof window.amfmMap !== 'undefined';
     }, { timeout: 180000 });
     
-    console.log('amfmMapV2 object exists, waiting for map instance...');
+    console.log('amfmMap object exists, waiting for map instance...');
     
     // Try to wait for the map instance, but don't fail if it doesn't exist
     try {
       await page.waitForFunction(() => {
-        return window.amfmMapV2?.map !== undefined;
+        return window.amfmMap?.map !== undefined;
       }, { timeout: 180000 });
       console.log('Map instance exists!');
     } catch (e) {
@@ -98,26 +98,26 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     console.log('Map instance exists, waiting for markers array...');
     
-    // Let's inspect what's actually in amfmMapV2 before waiting for markers
-    const amfmMapV2Info = await page.evaluate(() => {
-      if (typeof window.amfmMapV2 !== 'undefined') {
+    // Let's inspect what's actually in amfmMap before waiting for markers
+    const amfmMapInfo = await page.evaluate(() => {
+      if (typeof window.amfmMap !== 'undefined') {
         return {
           exists: true,
-          keys: Object.keys(window.amfmMapV2),
-          hasMap: window.amfmMapV2.map ? 'yes' : 'no',
-          hasMarkers: window.amfmMapV2.markers ? 'yes' : 'no',
-          markersLength: window.amfmMapV2.markers?.length || 'undefined'
+          keys: Object.keys(window.amfmMap),
+          hasMap: window.amfmMap.map ? 'yes' : 'no',
+          hasMarkers: window.amfmMap.markers ? 'yes' : 'no',
+          markersLength: window.amfmMap.markers?.length || 'undefined'
         };
       }
       return { exists: false };
     });
     
-    console.log('amfmMapV2 object inspection:', amfmMapV2Info);
+    console.log('amfmMap object inspection:', amfmMapInfo);
     
     // Try to wait for markers, but proceed even if it fails
     try {
       await page.waitForFunction(() => {
-        return window.amfmMapV2?.markers !== undefined;
+        return window.amfmMap?.markers !== undefined;
       }, { timeout: 10000 }); // Shorter timeout since we know markers are being created
       console.log('Markers array found!');
     } catch (e) {
@@ -173,9 +173,9 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     // Check map state after filtering
     const mapState = await page.evaluate(() => {
       return {
-        mapExists: typeof window.amfmMapV2 !== 'undefined',
-        markersArray: window.amfmMapV2?.markers?.length || 0,
-        mapInstance: window.amfmMapV2?.map ? 'exists' : 'missing'
+        mapExists: typeof window.amfmMap !== 'undefined',
+        markersArray: window.amfmMap?.markers?.length || 0,
+        mapInstance: window.amfmMap?.map ? 'exists' : 'missing'
       };
     });
     
@@ -193,7 +193,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     // Wait for initialization
     await page.waitForSelector('.amfm-filter-container', { timeout: 15000 });
-    await page.waitForSelector('.amfm-map-v2-container', { timeout: 15000 });
+    await page.waitForSelector('.amfm-map-container', { timeout: 15000 });
     
     console.log('Triggering initial page interaction to activate maps...');
     
@@ -211,17 +211,17 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     // Wait for map to fully load with extended timeout (3 minutes)
     console.log('Waiting for map to fully load...');
     
-    // First wait for amfmMapV2 to exist
+    // First wait for amfmMap to exist
     await page.waitForFunction(() => {
-      return typeof window.amfmMapV2 !== 'undefined';
+      return typeof window.amfmMap !== 'undefined';
     }, { timeout: 180000 });
     
-    console.log('amfmMapV2 object exists, waiting for map instance...');
+    console.log('amfmMap object exists, waiting for map instance...');
     
     // Try to wait for the map instance, but don't fail if it doesn't exist
     try {
       await page.waitForFunction(() => {
-        return window.amfmMapV2?.map !== undefined;
+        return window.amfmMap?.map !== undefined;
       }, { timeout: 180000 });
       console.log('Map instance exists!');
     } catch (e) {
@@ -232,7 +232,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     // Finally wait for markers array
     await page.waitForFunction(() => {
-      return window.amfmMapV2?.markers !== undefined;
+      return window.amfmMap?.markers !== undefined;
     }, { timeout: 180000 });
     
     console.log('Map loaded successfully, proceeding with test...');
@@ -250,7 +250,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     // Get initial marker count from console logs
     const initialMarkersOnMap = await page.evaluate(() => {
-      return window.amfmMapV2?.markers?.length || 0;
+      return window.amfmMap?.markers?.length || 0;
     });
     
     console.log('Initial markers on map:', initialMarkersOnMap);
@@ -266,7 +266,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
       
       // Check markers after filtering
       const markersAfterFilter = await page.evaluate(() => {
-        return window.amfmMapV2?.markers?.length || 0;
+        return window.amfmMap?.markers?.length || 0;
       });
       
       console.log('Markers after filter:', markersAfterFilter);
@@ -290,7 +290,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     // Wait for widgets
     await page.waitForSelector('.amfm-filter-container', { timeout: 15000 });
-    await page.waitForSelector('.amfm-map-v2-container', { timeout: 15000 });
+    await page.waitForSelector('.amfm-map-container', { timeout: 15000 });
     
     console.log('Triggering initial page interaction to activate maps...');
     
@@ -308,17 +308,17 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     // Wait for map to fully load with extended timeout (3 minutes)
     console.log('Waiting for map to fully load...');
     
-    // First wait for amfmMapV2 to exist
+    // First wait for amfmMap to exist
     await page.waitForFunction(() => {
-      return typeof window.amfmMapV2 !== 'undefined';
+      return typeof window.amfmMap !== 'undefined';
     }, { timeout: 180000 });
     
-    console.log('amfmMapV2 object exists, waiting for map instance...');
+    console.log('amfmMap object exists, waiting for map instance...');
     
     // Try to wait for the map instance, but don't fail if it doesn't exist
     try {
       await page.waitForFunction(() => {
-        return window.amfmMapV2?.map !== undefined;
+        return window.amfmMap?.map !== undefined;
       }, { timeout: 180000 });
       console.log('Map instance exists!');
     } catch (e) {
@@ -329,7 +329,7 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     
     // Finally wait for markers array
     await page.waitForFunction(() => {
-      return window.amfmMapV2?.markers !== undefined;
+      return window.amfmMap?.markers !== undefined;
     }, { timeout: 180000 });
     
     console.log('Map loaded successfully, proceeding with test...');
@@ -337,9 +337,9 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
     // Get initial map instance state
     const initialMapState = await page.evaluate(() => {
       return {
-        mapExists: typeof window.amfmMapV2 !== 'undefined',
-        mapInstance: window.amfmMapV2?.map ? 'exists' : 'missing',
-        markersCount: window.amfmMapV2?.markers?.length || 0
+        mapExists: typeof window.amfmMap !== 'undefined',
+        mapInstance: window.amfmMap?.map ? 'exists' : 'missing',
+        markersCount: window.amfmMap?.markers?.length || 0
       };
     });
     
@@ -358,9 +358,9 @@ test.describe('AMFM Filtering Issue Debug Tests', () => {
       // Check map instance after specific filter
       const afterFilterMapState = await page.evaluate(() => {
         return {
-          mapExists: typeof window.amfmMapV2 !== 'undefined',
-          mapInstance: window.amfmMapV2?.map ? 'exists' : 'missing',
-          markersCount: window.amfmMapV2?.markers?.length || 0
+          mapExists: typeof window.amfmMap !== 'undefined',
+          mapInstance: window.amfmMap?.map ? 'exists' : 'missing',
+          markersCount: window.amfmMap?.markers?.length || 0
         };
       });
       
