@@ -212,8 +212,8 @@ amfm-maps/
 ├── amfm-maps.php                         # Main plugin file
 ├── includes/
 │   └── elementor/
-│       ├── class-map-v2-widget.php       # V2 map widget (map only)
-│       └── class-map-v2-filter-widget.php # V2 filter widget (filter only)
+│       ├── class-map-widget.php          # Map widget (map only)
+│       └── class-map-filter-widget.php   # Filter widget (filter only)
 ├── admin/
 │   └── class-amfm-maps-admin.php         # Admin interface
 ├── assets/
@@ -228,14 +228,14 @@ amfm-maps/
 
 ### Widget Classes
 
-#### MapV2Widget (`class-map-v2-widget.php`)
-- **Class**: `AMFM_Maps\Elementor\MapV2Widget`
+#### MapWidget (`class-map-widget.php`)
+- **Class**: `AMFM_Maps\Elementor\MapWidget`
 - **Extends**: `\Elementor\Widget_Base`
 - **Purpose**: Map display only
 - **Features**: Google Maps integration, marker display, external filter communication
 
-#### MapV2FilterWidget (`class-map-v2-filter-widget.php`)
-- **Class**: `AMFM_Maps\Elementor\MapV2FilterWidget`
+#### MapFilterWidget (`class-map-filter-widget.php`)
+- **Class**: `AMFM_Maps\Elementor\MapFilterWidget`
 - **Extends**: `\Elementor\Widget_Base`
 - **Purpose**: Filter controls only
 - **Features**: Filter UI, cross-widget communication, styling controls

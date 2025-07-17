@@ -1,4 +1,4 @@
-# AMFM Map V2 Widget - Troubleshooting Guide
+# AMFM Map Widget - Troubleshooting Guide
 
 ## Map Not Displaying Issues
 
@@ -7,7 +7,7 @@ If the map is not displaying properly, follow these troubleshooting steps:
 ### 1. Check Browser Console
 Open your browser's Developer Tools (F12) and check the Console tab for error messages. Look for:
 - Google Maps API loading errors
-- JavaScript errors related to `amfmMapV2`
+- JavaScript errors related to `amfmMap`
 - Network errors when loading scripts
 
 ### 2. Verify Google Maps API Key
@@ -53,7 +53,7 @@ You can test the widget with custom JSON data by:
 ### 9. Console Debug Information
 The widget outputs debug information to the console:
 ```javascript
-AMFM Map V2 Widget initializing for: [unique_id]
+AMFM Map Widget initializing for: [unique_id]
 JSON Data count: [number]
 Waiting for dependencies... [status object]
 Google Maps API loaded, initializing map...
@@ -77,8 +77,8 @@ add_action('wp_enqueue_scripts', function() {
 If automatic initialization fails, you can manually trigger it:
 ```javascript
 // In browser console
-if (typeof amfmMapV2 !== 'undefined') {
-    amfmMapV2.init({
+if (typeof amfmMap !== 'undefined') {
+    amfmMap.init({
         unique_id: 'your_widget_id',
         json_data: [], // your data
         api_key: 'your_api_key'
@@ -132,7 +132,7 @@ When reporting issues, please provide:
    - Filter interface
 
 4. **JavaScript**: `/assets/js/script.js`
-   - New `amfmMapV2` namespace
+   - New `amfmMap` namespace
    - Map initialization logic
    - Filter functionality
 
