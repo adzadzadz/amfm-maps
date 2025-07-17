@@ -18,7 +18,7 @@ export const testConfig = {
   
   selectors: {
     map: {
-      container: '[id*="amfm_map_v2_"]',
+      container: '[id*="amfm_map_"]',
       mapElement: '[id*="_map"]',
       counter: '[id*="_counter"]',
       googleMap: '.gm-style'

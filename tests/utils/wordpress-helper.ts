@@ -82,11 +82,11 @@ export class WordPressHelper {
     await this.page.waitForTimeout(1000);
     
     // Search for AMFM widget
-    await this.page.fill('.elementor-search-input', 'AMFM Map V2');
+    await this.page.fill('.elementor-search-input', 'AMFM Map');
     await this.page.waitForTimeout(500);
     
     // Click on the widget
-    const mapWidget = this.page.locator('.elementor-element-wrapper').filter({ hasText: 'AMFM Map V2' }).first();
+    const mapWidget = this.page.locator('.elementor-element-wrapper').filter({ hasText: 'AMFM Map' }).first();
     await mapWidget.click();
     
     await this.page.waitForTimeout(2000);
@@ -101,11 +101,11 @@ export class WordPressHelper {
     await this.page.waitForTimeout(1000);
     
     // Search for AMFM Filter widget
-    await this.page.fill('.elementor-search-input', 'AMFM Map V2 Filter');
+    await this.page.fill('.elementor-search-input', 'AMFM Map Filter');
     await this.page.waitForTimeout(500);
     
     // Click on the widget
-    const filterWidget = this.page.locator('.elementor-element-wrapper').filter({ hasText: 'AMFM Map V2 Filter' }).first();
+    const filterWidget = this.page.locator('.elementor-element-wrapper').filter({ hasText: 'AMFM Map Filter' }).first();
     await filterWidget.click();
     
     await this.page.waitForTimeout(2000);
@@ -159,7 +159,7 @@ export class WordPressHelper {
     try {
       await this.page.waitForFunction(
         () => {
-          const mapElement = document.querySelector('[id*="amfm_map_v2_"]') as HTMLElement;
+          const mapElement = document.querySelector('[id*="amfm_map_"]') as HTMLElement;
           return mapElement && (mapElement.querySelector('.gm-style') || mapElement.querySelector('canvas') || mapElement.offsetHeight > 100);
         },
         { timeout }
