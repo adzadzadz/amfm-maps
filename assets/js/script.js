@@ -387,18 +387,18 @@ amfmMap.init = function(settings) {
 
         var drawer_info = `
             <!-- Name -->
-            <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #333;">
+            <div class="amfm-map-drawer-info-name">
             ${place.name || locationData?.['(Internal) Name'] || 'AMFM Location'}
             </div>
             
             <!-- Address -->
-            <div style="font-size: 14px; color: #666; margin-bottom: 8px; display: flex; align-items: center;">
+            <div class="amfm-map-drawer-info-address">
             <i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i>
             ${place.formatted_address || "Address not available"}
             </div>
 
             <!-- Rating -->
-            ${place.rating ? `<div style="font-size: 14px; margin-bottom: 8px; display: flex; align-items: center;">
+            ${place.rating ? `<div class="amfm-map-drawer-info-rating">
             <span style="color: #333; margin-right: 5px;">${place.rating.toFixed(1)}</span> 
             <span style="color: #ffc107;">${generateStars(place.rating)}</span>
             </div>` : ""}
@@ -422,14 +422,18 @@ amfmMap.init = function(settings) {
 
         var content = `
             <div class="amfm-map-info-content">
-                <div class="amfm-maps-single-photo">
-                    ${photoSlider}
+                <div class="amfm-maps-drawer-left">
+                    <div class="amfm-maps-single-photo">
+                        ${photoSlider}
+                    </div>
                 </div>
-                <div class="amfm-maps-info-wrapper">
-                    ${drawer_info}
-                </div>
-                <div class="amfm-maps-drawer-actions">
-                    ${drawer_actions}
+                <div class="amfm-maps-drawer-right">
+                    <div class="amfm-maps-info-wrapper">
+                        ${drawer_info}
+                    </div>
+                    <div class="amfm-maps-drawer-actions">
+                        ${drawer_actions}
+                    </div>
                 </div>
             </div>
         `;
