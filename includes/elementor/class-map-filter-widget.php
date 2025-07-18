@@ -433,7 +433,7 @@ class MapFilterWidget extends Widget_Base
                     'button_size' => 'custom',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-button' => 'width: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -458,7 +458,7 @@ class MapFilterWidget extends Widget_Base
                     'button_size' => 'custom',
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-button' => 'height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -479,7 +479,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Text Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button' => 'color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -510,7 +510,7 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-button' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -520,7 +520,7 @@ class MapFilterWidget extends Widget_Base
             [
                 'name' => 'button_box_shadow',
                 'label' => __('Box Shadow', 'amfm-maps'),
-                'selector' => '{{WRAPPER}} .amfm-filter-button',
+                'selector' => '{{WRAPPER}} .amfm-filter-button !important',
             ]
         );
 
@@ -540,7 +540,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Text Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button:hover' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button:hover' => 'color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -561,7 +561,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Border Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button:hover' => 'border-color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button:hover' => 'border-color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -593,7 +593,7 @@ class MapFilterWidget extends Widget_Base
                     'size' => 300,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'transition: all {{SIZE}}{{UNIT}} ease-in-out;',
+                    '{{WRAPPER}} .amfm-filter-button' => 'transition: all {{SIZE}}{{UNIT}} ease-in-out !important;',
                 ],
             ]
         );
@@ -614,7 +614,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Text Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button.active' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button.active' => 'color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -635,7 +635,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Border Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button.active' => 'border-color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button.active' => 'border-color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -666,7 +666,7 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -678,7 +678,7 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-button' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -700,7 +700,7 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-buttons-wrapper' => 'gap: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-buttons-wrapper' => 'gap: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -735,8 +735,8 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button i' => 'font-size: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .amfm-filter-button svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-button i' => 'font-size: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button svg' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
                 ],
                 'condition' => [
                     'show_icons' => 'yes',
@@ -750,8 +750,8 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Icon Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button i' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .amfm-filter-button svg' => 'fill: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button i' => 'color: {{VALUE}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button svg' => 'fill: {{VALUE}} !important;',
                 ],
                 'condition' => [
                     'show_icons' => 'yes',
@@ -765,8 +765,8 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Icon Hover Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button:hover i' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .amfm-filter-button:hover svg' => 'fill: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button:hover i' => 'color: {{VALUE}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button:hover svg' => 'fill: {{VALUE}} !important;',
                 ],
                 'condition' => [
                     'show_icons' => 'yes',
@@ -780,8 +780,8 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Icon Active Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button.active i' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .amfm-filter-button.active svg' => 'fill: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-button.active i' => 'color: {{VALUE}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button.active svg' => 'fill: {{VALUE}} !important;',
                 ],
                 'condition' => [
                     'show_icons' => 'yes',
@@ -806,13 +806,13 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-button.icon-left i, {{WRAPPER}} .amfm-filter-button.icon-left svg' => 'margin-right: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .amfm-filter-button.icon-right i, {{WRAPPER}} .amfm-filter-button.icon-right svg' => 'margin-left: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .amfm-filter-button.icon-top i, {{WRAPPER}} .amfm-filter-button.icon-top svg' => 'margin-bottom: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .amfm-filter-button.icon-bottom i, {{WRAPPER}} .amfm-filter-button.icon-bottom svg' => 'margin-top: {{SIZE}}{{UNIT}};',
-                    '{{WRAPPER}} .amfm-filter-button.icon-top, {{WRAPPER}} .amfm-filter-button.icon-bottom' => 'flex-direction: column;',
-                    '{{WRAPPER}} .amfm-filter-button.icon-right' => 'flex-direction: row-reverse;',
-                    '{{WRAPPER}} .amfm-filter-button' => 'display: flex; align-items: center; justify-content: center;',
+                    '{{WRAPPER}} .amfm-filter-button.icon-left i, {{WRAPPER}} .amfm-filter-button.icon-left svg' => 'margin-right: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button.icon-right i, {{WRAPPER}} .amfm-filter-button.icon-right svg' => 'margin-left: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button.icon-top i, {{WRAPPER}} .amfm-filter-button.icon-top svg' => 'margin-bottom: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button.icon-bottom i, {{WRAPPER}} .amfm-filter-button.icon-bottom svg' => 'margin-top: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .amfm-filter-button.icon-top, {{WRAPPER}} .amfm-filter-button.icon-bottom' => 'flex-direction: column !important;',
+                    '{{WRAPPER}} .amfm-filter-button.icon-right' => 'flex-direction: row-reverse !important;',
+                    '{{WRAPPER}} .amfm-filter-button' => 'display: flex !important; align-items: center !important; justify-content: center !important;',
                 ],
                 'condition' => [
                     'show_icons' => 'yes',
@@ -862,7 +862,7 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-container' => 'width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-container' => 'width: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -888,7 +888,7 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-container' => 'max-width: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-container' => 'max-width: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -910,7 +910,7 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-container' => 'height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-container' => 'height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -962,7 +962,7 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-container' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-container' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -993,11 +993,10 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-container' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-container' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
-
         $this->add_responsive_control(
             'container_margin',
             [
@@ -1005,11 +1004,10 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-container' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-container' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
-
         $this->end_controls_section();
 
         // Filter Group Title Styling
@@ -1020,7 +1018,6 @@ class MapFilterWidget extends Widget_Base
                 'tab' => Controls_Manager::TAB_STYLE,
             ]
         );
-
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
@@ -1029,19 +1026,17 @@ class MapFilterWidget extends Widget_Base
                 'selector' => '{{WRAPPER}} .amfm-filter-group-title, {{WRAPPER}} .amfm-filter-group h5',
             ]
         );
-
         $this->add_control(
             'group_title_color',
             [
                 'label' => __('Text Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-group-title' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .amfm-filter-group h5' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-group-title' => 'color: {{VALUE}} !important;',
+                    '{{WRAPPER}} .amfm-filter-group h5' => 'color: {{VALUE}} !important;',
                 ],
             ]
         );
-
         $this->add_responsive_control(
             'group_title_margin',
             [
@@ -1049,12 +1044,144 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-group-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .amfm-filter-group h5' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-group-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .amfm-filter-group h5' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
+                ],
+            ]
+        );
+        $this->add_control(
+            'group_title_separator',
+            [
+                'label' => __('Show Separator', 'amfm-maps'),
+                'type' => Controls_Manager::SWITCHER,
+                'label_on' => __('Yes', 'amfm-maps'),
+                'label_off' => __('No', 'amfm-maps'),
+                'return_value' => 'yes',
+                'default' => 'no',
+            ]
+        );
+        $this->add_control(
+            'group_title_separator_style',
+            [
+                'label' => __('Separator Style', 'amfm-maps'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'solid',
+                'options' => [
+                    'solid' => __('Solid', 'amfm-maps'),
+                    'dashed' => __('Dashed', 'amfm-maps'),
+                    'dotted' => __('Dotted', 'amfm-maps'),
+                ],
+                'condition' => [
+                    'group_title_separator' => 'yes',
+                ],
+            ]
+        );
+        $this->add_control(
+            'group_title_separator_color',
+            [
+                'label' => __('Separator Color', 'amfm-maps'),
+                'type' => Controls_Manager::COLOR,
+                'condition' => [
+                    'group_title_separator' => 'yes',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-filter-group-separator' => 'border-bottom-color: {{VALUE}} !important;',
+                ],
+            ]
+        );
+        $this->add_control(
+            'group_title_border',
+            [
+                'label' => __('Group Title Border', 'amfm-maps'),
+                'type' => Controls_Manager::SWITCHER,
+                'label_on' => __('Show', 'amfm-maps'),
+                'label_off' => __('Hide', 'amfm-maps'),
+                'return_value' => 'yes',
+                'default' => 'no',
+            ]
+        );
+        $this->add_control(
+            'group_title_border_style',
+            [
+                'label' => __('Border Style', 'amfm-maps'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'solid',
+                'options' => [
+                    'solid' => __('Solid', 'amfm-maps'),
+                    'dashed' => __('Dashed', 'amfm-maps'),
+                    'dotted' => __('Dotted', 'amfm-maps'),
+                ],
+                'condition' => [
+                    'group_title_border' => 'yes',
+                ],
+            ]
+        );
+        $this->add_control(
+            'group_title_border_color',
+            [
+                'label' => __('Border Color', 'amfm-maps'),
+                'type' => Controls_Manager::COLOR,
+                'condition' => [
+                    'group_title_border' => 'yes',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-filter-group-title' => 'border-bottom-color: {{VALUE}} !important;',
+                ],
+            ]
+        );
+        $this->add_responsive_control(
+            'group_title_border_width',
+            [
+                'label' => __('Border Width', 'amfm-maps'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 1,
+                        'max' => 10,
+                    ],
+                ],
+                'condition' => [
+                    'group_title_border' => 'yes',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-filter-group-title' => 'border-bottom-width: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
 
+        $this->add_responsive_control(
+            'group_title_distance_to_buttons',
+            [
+                'label' => __('Group Title Distance to Buttons', 'amfm-maps'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [ 'min' => 0, 'max' => 50 ],
+                    'em' => [ 'min' => 0, 'max' => 5 ],
+                    'rem' => [ 'min' => 0, 'max' => 5 ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-filter-group-title' => 'margin-bottom: {{SIZE}}{{UNIT}} !important;',
+                ],
+            ]
+        );
+        $this->add_responsive_control(
+            'group_distance_from_other_groups',
+            [
+                'label' => __('Group Distance from Other Groups', 'amfm-maps'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', 'rem'],
+                'range' => [
+                    'px' => [ 'min' => 0, 'max' => 60 ],
+                    'em' => [ 'min' => 0, 'max' => 6 ],
+                    'rem' => [ 'min' => 0, 'max' => 6 ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .amfm-filter-group-buttons' => 'margin-bottom: {{SIZE}}{{UNIT}} !important;',
+                ],
+            ]
+        );
         $this->end_controls_section();
 
         // Filter Title Styling
@@ -1084,7 +1211,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Text Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-title h3' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-title h3' => 'color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -1110,7 +1237,7 @@ class MapFilterWidget extends Widget_Base
                 ],
                 'default' => 'left',
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-title' => 'text-align: {{VALUE}};',
+                    '{{WRAPPER}} .amfm-filter-title' => 'text-align: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -1122,7 +1249,7 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -1167,7 +1294,7 @@ class MapFilterWidget extends Widget_Base
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-panel' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-panel' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -1188,7 +1315,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Checkbox Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-option input[type="checkbox"]' => 'accent-color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-option input[type="checkbox"]' => 'accent-color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -1206,7 +1333,7 @@ class MapFilterWidget extends Widget_Base
                     ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-option input[type="checkbox"]' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .amfm-filter-option input[type="checkbox"]' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -1226,7 +1353,7 @@ class MapFilterWidget extends Widget_Base
                 'label' => __('Label Color', 'amfm-maps'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .amfm-filter-option span' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .amfm-filter-option span' => 'color: {{VALUE}} !important;',
                 ],
             ]
         );
@@ -1266,6 +1393,11 @@ class MapFilterWidget extends Widget_Base
 
         // Get filter configuration for labels and enabled status
         $filter_config = \Amfm_Maps_Admin::get_filter_config();
+
+        // Get group title separator settings
+        $show_group_separator = ($settings['group_title_separator'] ?? 'no') === 'yes';
+        $group_separator_style = $settings['group_title_separator_style'] ?? 'solid';
+        $group_separator_color = $settings['group_title_separator_color'] ?? '#ddd';
 
         // Get icon settings
         $show_icons = $settings['show_icons'] === 'yes';
@@ -1307,12 +1439,19 @@ class MapFilterWidget extends Widget_Base
                 <div class="amfm-filter-buttons-wrapper">
                     <?php if ($filter_config['location']['enabled'] && !empty($filter_options['location'])): ?>
                         <div class="amfm-filter-group-buttons">
-                            <span class="amfm-filter-group-title">
+                            <span class="amfm-filter-group-title"
+                                <?php if (($settings['group_title_border'] ?? 'no') === 'yes'): ?>
+                                    style="display:block;border-bottom:<?php echo esc_attr($settings['group_title_border_width']['size'] ?? 2); ?>px <?php echo esc_attr($settings['group_title_border_style'] ?? 'solid'); ?> <?php echo esc_attr($settings['group_title_border_color'] ?? '#ddd'); ?>;margin-bottom:8px;"
+                                <?php endif; ?>
+                            >
                                 <?php if ($show_icons && !empty($filter_icons['location']['value'])): ?>
                                     <?php \Elementor\Icons_Manager::render_icon($filter_icons['location'], ['aria-hidden' => 'true']); ?>
                                 <?php endif; ?>
                                 <?php echo esc_html($filter_config['location']['label'] ?? __('Location:', 'amfm-maps')); ?>
                             </span>
+                            <?php if ($show_group_separator): ?>
+                                <span class="amfm-filter-group-separator" style="display:block;border-bottom:2px <?php echo esc_attr($group_separator_style); ?> <?php echo esc_attr($group_separator_color); ?>;margin:8px 0;"></span>
+                            <?php endif; ?>
                             <?php foreach ($filter_options['location'] as $location): ?>
                                 <button class="<?php echo esc_attr($button_class_string); ?>" data-filter-type="location" data-filter-value="<?php echo esc_attr($location); ?>">
                                     <?php if ($show_icons && !empty($filter_icons['location']['value']) && in_array($icon_position, ['left', 'top'])): ?>
@@ -1329,12 +1468,19 @@ class MapFilterWidget extends Widget_Base
 
                     <?php if ($filter_config['gender']['enabled'] && !empty($filter_options['gender'])): ?>
                         <div class="amfm-filter-group-buttons">
-                            <span class="amfm-filter-group-title">
+                            <span class="amfm-filter-group-title"
+                                <?php if (($settings['group_title_border'] ?? 'no') === 'yes'): ?>
+                                    style="display:block;border-bottom:<?php echo esc_attr($settings['group_title_border_width']['size'] ?? 2); ?>px <?php echo esc_attr($settings['group_title_border_style'] ?? 'solid'); ?> <?php echo esc_attr($settings['group_title_border_color'] ?? '#ddd'); ?>;margin-bottom:8px;"
+                                <?php endif; ?>
+                            >
                                 <?php if ($show_icons && !empty($filter_icons['gender']['value'])): ?>
                                     <?php \Elementor\Icons_Manager::render_icon($filter_icons['gender'], ['aria-hidden' => 'true']); ?>
                                 <?php endif; ?>
                                 <?php echo esc_html($filter_config['gender']['label'] ?? __('Gender:', 'amfm-maps')); ?>
                             </span>
+                            <?php if ($show_group_separator): ?>
+                                <span class="amfm-filter-group-separator" style="display:block;border-bottom:2px <?php echo esc_attr($group_separator_style); ?> <?php echo esc_attr($group_separator_color); ?>;margin:8px 0;"></span>
+                            <?php endif; ?>
                             <?php foreach ($filter_options['gender'] as $gender): ?>
                                 <button class="<?php echo esc_attr($button_class_string); ?>" data-filter-type="gender" data-filter-value="<?php echo esc_attr($gender); ?>">
                                     <?php if ($show_icons && !empty($filter_icons['gender']['value']) && in_array($icon_position, ['left', 'top'])): ?>
@@ -1351,12 +1497,19 @@ class MapFilterWidget extends Widget_Base
 
                     <?php if ($filter_config['conditions']['enabled'] && !empty($filter_options['conditions'])): ?>
                         <div class="amfm-filter-group-buttons">
-                            <span class="amfm-filter-group-title">
+                            <span class="amfm-filter-group-title"
+                                <?php if (($settings['group_title_border'] ?? 'no') === 'yes'): ?>
+                                    style="display:block;border-bottom:<?php echo esc_attr($settings['group_title_border_width']['size'] ?? 2); ?>px <?php echo esc_attr($settings['group_title_border_style'] ?? 'solid'); ?> <?php echo esc_attr($settings['group_title_border_color'] ?? '#ddd'); ?>;margin-bottom:8px;"
+                                <?php endif; ?>
+                            >
                                 <?php if ($show_icons && !empty($filter_icons['conditions']['value'])): ?>
                                     <?php \Elementor\Icons_Manager::render_icon($filter_icons['conditions'], ['aria-hidden' => 'true']); ?>
                                 <?php endif; ?>
                                 <?php echo esc_html($filter_config['conditions']['label'] ?? __('Conditions:', 'amfm-maps')); ?>
                             </span>
+                            <?php if ($show_group_separator): ?>
+                                <span class="amfm-filter-group-separator" style="display:block;border-bottom:2px <?php echo esc_attr($group_separator_style); ?> <?php echo esc_attr($group_separator_color); ?>;margin:8px 0;"></span>
+                            <?php endif; ?>
                             <?php foreach ($filter_options['conditions'] as $condition): ?>
                                 <button class="<?php echo esc_attr($button_class_string); ?>" data-filter-type="conditions" data-filter-value="<?php echo esc_attr($condition); ?>">
                                     <?php if ($show_icons && !empty($filter_icons['conditions']['value']) && in_array($icon_position, ['left', 'top'])): ?>
@@ -1370,15 +1523,22 @@ class MapFilterWidget extends Widget_Base
                             <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
-
+                    
                     <?php if ($filter_config['programs']['enabled'] && !empty($filter_options['programs'])): ?>
                         <div class="amfm-filter-group-buttons">
-                            <span class="amfm-filter-group-title">
+                            <span class="amfm-filter-group-title"
+                                <?php if (($settings['group_title_border'] ?? 'no') === 'yes'): ?>
+                                    style="display:block;border-bottom:<?php echo esc_attr($settings['group_title_border_width']['size'] ?? 2); ?>px <?php echo esc_attr($settings['group_title_border_style'] ?? 'solid'); ?> <?php echo esc_attr($settings['group_title_border_color'] ?? '#ddd'); ?>;margin-bottom:8px;"
+                                <?php endif; ?>
+                            >
                                 <?php if ($show_icons && !empty($filter_icons['programs']['value'])): ?>
                                     <?php \Elementor\Icons_Manager::render_icon($filter_icons['programs'], ['aria-hidden' => 'true']); ?>
                                 <?php endif; ?>
                                 <?php echo esc_html($filter_config['programs']['label'] ?? __('Programs:', 'amfm-maps')); ?>
                             </span>
+                            <?php if ($show_group_separator): ?>
+                                <span class="amfm-filter-group-separator" style="display:block;border-bottom:2px <?php echo esc_attr($group_separator_style); ?> <?php echo esc_attr($group_separator_color); ?>;margin:8px 0;"></span>
+                            <?php endif; ?>
                             <?php foreach ($filter_options['programs'] as $program): ?>
                                 <button class="<?php echo esc_attr($button_class_string); ?>" data-filter-type="programs" data-filter-value="<?php echo esc_attr($program); ?>">
                                     <?php if ($show_icons && !empty($filter_icons['programs']['value']) && in_array($icon_position, ['left', 'top'])): ?>
@@ -1395,12 +1555,19 @@ class MapFilterWidget extends Widget_Base
 
                     <?php if ($filter_config['accommodations']['enabled'] && !empty($filter_options['accommodations'])): ?>
                         <div class="amfm-filter-group-buttons">
-                            <span class="amfm-filter-group-title">
+                            <span class="amfm-filter-group-title"
+                                <?php if (($settings['group_title_border'] ?? 'no') === 'yes'): ?>
+                                    style="display:block;border-bottom:<?php echo esc_attr($settings['group_title_border_width']['size'] ?? 2); ?>px <?php echo esc_attr($settings['group_title_border_style'] ?? 'solid'); ?> <?php echo esc_attr($settings['group_title_border_color'] ?? '#ddd'); ?>;margin-bottom:8px;"
+                                <?php endif; ?>
+                            >
                                 <?php if ($show_icons && !empty($filter_icons['accommodations']['value'])): ?>
                                     <?php \Elementor\Icons_Manager::render_icon($filter_icons['accommodations'], ['aria-hidden' => 'true']); ?>
                                 <?php endif; ?>
                                 <?php echo esc_html($filter_config['accommodations']['label'] ?? __('Accommodations:', 'amfm-maps')); ?>
                             </span>
+                            <?php if ($show_group_separator): ?>
+                                <span class="amfm-filter-group-separator" style="display:block;border-bottom:2px <?php echo esc_attr($group_separator_style); ?> <?php echo esc_attr($group_separator_color); ?>;margin:8px 0;"></span>
+                            <?php endif; ?>
                             <?php foreach ($filter_options['accommodations'] as $accommodation): ?>
                                 <button class="<?php echo esc_attr($button_class_string); ?>" data-filter-type="accommodations" data-filter-value="<?php echo esc_attr($accommodation); ?>">
                                     <?php if ($show_icons && !empty($filter_icons['accommodations']['value']) && in_array($icon_position, ['left', 'top'])): ?>
@@ -1669,6 +1836,8 @@ class MapFilterWidget extends Widget_Base
                 }
             }
         }
+
+
 
         foreach ($options as $key => $items) {
             if (!empty($filter_config[$key]['enabled'])) {

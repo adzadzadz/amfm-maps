@@ -361,12 +361,12 @@ amfmMap.init = function(settings) {
             var firstPhoto = photos[0];
             var photoUrl = firstPhoto.getUrl({ maxWidth: 400, maxHeight: 250 });
             photoSlider = `
-                <img src="${photoUrl}" alt="Location Photo" style="width: 100%; height: auto;">
+                <img src="${photoUrl}" alt="Location Photo">
             `;
         } else if (locationData && locationData.Image) {
             // Fallback to location data image
             photoSlider = `
-                <img src="${locationData.Image}" alt="Location Image" style="width: 100%; height: auto;">
+                <img src="${locationData.Image}" alt="Location Image">
             `;
         }
 
